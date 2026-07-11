@@ -1,17 +1,54 @@
-import type { LoginCredentials, LoginOutcome } from '@/features/authentication/model/login';
+import type { LoginCredentials, LoginSession } from '@/features/authentication/model/login';
 
 /**
- * Point d'entrée de l'authentification côté frontend.
- *
- * Le récit TAKIBO UI 01 ne connecte pas encore le formulaire au backend :
- * cette fonction simule uniquement la latence réseau afin d'exercer l'état
- * de chargement, puis répond honnêtement que le service n'est pas connecté.
- * Elle sera remplacée par l'appel au BFF Spring Boot (récit TAKIBO UI 02).
- *
- * Règle de sécurité : les identifiants ne sont jamais journalisés, jamais
- * placés dans une URL, jamais stockés dans le navigateur.
+ * Erreur de connexion portant un message destiné à l'utilisateur.
+ * Aucun détail technique du backend n'est exposé, et le message ne révèle
+ * jamais si une adresse courriel existe (doctrine anti-énumération).
  */
-export async function authenticate(_credentials: LoginCredentials): Promise<LoginOutcome> {
-  await new Promise((resolve) => setTimeout(resolve, 1200));
-  return { status: 'service-not-connected' };
+export class LoginError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'LoginError';
+  }
+}
+
+function messageForStatus(status: number): string {
+  switch (status) {
+    case 400:
+    case 401:
+      return 'Identifiants invalides.';
+    case 403:
+      return 'Connexion refusée : ce compte ne peut pas accéder à ce space.';
+    case 404:
+      return 'Organisation ou space introuvable.';
+    default:
+      return 'Connexion impossible pour le moment. Veuillez réessayer.';
+  }
+}
+
+/**
+ * Login humain situé contre TIS-CORE (récit 01.5, mode direct provisoire).
+ * En dev, /api est relayé vers takibo-iam-boot par le proxy Vite.
+ *
+ * Règles de sécurité : les identifiants ne sont jamais journalisés, jamais
+ * placés dans une URL ; le token rendu ne doit jamais être persisté dans le
+ * navigateur (session en mémoire uniquement, jusqu'au BFF du récit 02).
+ */
+export async function authenticate(credentials: LoginCredentials): Promise<LoginSession> {
+  let response: Response;
+  try {
+    response = await fetch('/api/v1/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+  } catch {
+    throw new LoginError('Le service TAKIBO est injoignable. Vérifiez que le backend est démarré.');
+  }
+
+  if (!response.ok) {
+    throw new LoginError(messageForStatus(response.status));
+  }
+
+  return (await response.json()) as LoginSession;
 }

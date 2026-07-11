@@ -1,6 +1,7 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 
 import { LoginPage } from '@/features/authentication/pages/LoginPage';
+import { SessionPage } from '@/features/authentication/pages/SessionPage';
 import { AuthenticationLayout } from '@/layouts/AuthenticationLayout/AuthenticationLayout';
 
 /**
@@ -11,7 +12,10 @@ import { AuthenticationLayout } from '@/layouts/AuthenticationLayout/Authenticat
 export const routes = [
   {
     element: <AuthenticationLayout />,
-    children: [{ path: '/login', element: <LoginPage /> }],
+    children: [
+      { path: '/login', element: <LoginPage /> },
+      { path: '/session', element: <SessionPage /> },
+    ],
   },
   { path: '*', element: <Navigate to="/login" replace /> },
 ];

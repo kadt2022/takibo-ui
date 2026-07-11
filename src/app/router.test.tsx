@@ -32,4 +32,13 @@ describe('router', () => {
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');
   });
+
+  it('protège /session : sans session en mémoire, retour à /login', async () => {
+    const router = renderAt('/session');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Bienvenue dans TAKIBO' }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/login');
+  });
 });

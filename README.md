@@ -71,9 +71,47 @@ Le frontend n'est jamais la frontière finale de sécurité.
   par un cookie sécurisé émis par le BFF Spring Boot (récit TAKIBO UI 02), qui dialoguera
   en OAuth2/OIDC avec le TAKIBO Authorization Server.
 
-## Périmètre du récit 01
+## Première connexion réelle (récit 01.5 — mode direct provisoire)
 
-La page de connexion est complète (validation, accessibilité, responsive, états de
-chargement) mais n'est **pas encore connectée** au service d'authentification : toute
-soumission l'indique honnêtement et aucune session n'est créée. La connexion réelle,
-le MFA, la fédération et la récupération du mot de passe arrivent dans les récits suivants.
+Depuis le récit 01.5, le formulaire appelle réellement TIS-CORE
+(`POST /api/v1/auth/login`) via le proxy Vite (`/api` → `http://localhost:8081`).
+Le login TAKIBO est **situé** : il exige le code de l'organisation et le code du
+space en plus du courriel et du mot de passe. En cas de succès, l'écran `/session`
+montre le pouvoir effectif rendu par le token (rôles, groupes, permissions).
+
+Ce mode est **provisoire et assumé** : la session vit uniquement en mémoire React
+(un rafraîchissement la termine), aucun token n'est écrit dans le stockage
+navigateur. Le BFF Spring Boot (récit TAKIBO UI 02) apportera la session durable
+par cookie sécurisé.
+
+### Tester en local
+
+1. Démarrer le backend Takibo-IAM : `./gradlew :takibo-iam-boot:bootRun` (port 8081).
+2. Provisionner une organisation et son fondateur (une seule fois) :
+
+```powershell
+# Token PLATFORM (client dev postman)
+$pair = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('postman-client:dev-postman-secret'))
+$tok = Invoke-RestMethod -Method Post -Uri http://localhost:8081/oauth2/token `
+  -Headers @{ Authorization = "Basic $pair" } `
+  -ContentType 'application/x-www-form-urlencoded' `
+  -Body 'grant_type=client_credentials&scope=api.read api.write'
+
+# Signup org + space + fondateur
+Invoke-RestMethod -Method Post -Uri http://localhost:8081/api/v1/orgs/signup `
+  -Headers @{ Authorization = "Bearer $($tok.access_token)" } `
+  -ContentType 'application/json' -Body '{
+    "organization": { "code": "takibo-demo", "name": "Org TAKIBO Demo" },
+    "space":        { "code": "finance", "name": "Finance", "description": "Espace finance" },
+    "account":      { "email": "founder@takibo.io", "password": "Str0ng!Passw0rd" },
+    "profile":      { "username": "founder", "firstName": "Tresor", "lastName": "Kadima" }
+  }'
+```
+
+3. `npm run dev` puis se connecter sur `http://localhost:5173/login` avec
+   `takibo-demo` / `finance` / `founder@takibo.io` / `Str0ng!Passw0rd`.
+
+## Hors périmètre
+
+Le MFA, la fédération, la récupération du mot de passe et la console
+d'administration arrivent dans les récits suivants.

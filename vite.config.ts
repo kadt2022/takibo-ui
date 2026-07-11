@@ -12,6 +12,16 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    // Provisoire (récit 01.5) : en dev, /api est relayé vers takibo-iam-boot.
+    // Le BFF (récit TAKIBO UI 02) remplacera ce relais.
+    proxy: {
+      '/api': {
+        target: process.env['TAKIBO_API_TARGET'] ?? 'http://localhost:8081',
+        changeOrigin: true,
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],

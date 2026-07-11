@@ -2,20 +2,27 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 
 import { Alert } from '@/design-system/components/Alert';
 import { Button } from '@/design-system/components/Button';
 import { FormField } from '@/design-system/components/FormField';
 import { Input } from '@/design-system/components/Input';
 import { PasswordInput } from '@/design-system/components/PasswordInput';
+import { LoginError } from '@/features/authentication/api/login-api';
 import { useLogin } from '@/features/authentication/hooks/use-login';
 import { loginSchema } from '@/features/authentication/schemas/login-schema';
 import type { LoginFormValues } from '@/features/authentication/schemas/login-schema';
 import { fieldErrorId } from '@/shared/utilities/field-error-id';
+import { useSession } from '@/shared/security/session-context';
+
+type Notice = { kind: 'info' | 'danger'; text: string };
 
 export function LoginForm() {
   const login = useLogin();
-  const [notice, setNotice] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { openSession } = useSession();
+  const [notice, setNotice] = useState<Notice | null>(null);
 
   const {
     register,
@@ -23,7 +30,7 @@ export function LoginForm() {
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '', password: '', orgCode: '', spaceCode: '' },
   });
 
   const onSubmit = handleSubmit(async (values) => {
@@ -31,22 +38,54 @@ export function LoginForm() {
       return;
     }
     setNotice(null);
-    const outcome = await login.mutateAsync(values);
-    if (outcome.status === 'service-not-connected') {
-      setNotice(
-        'La connexion au service d’authentification TAKIBO sera activée dans un prochain récit. ' +
-          'Aucune session n’a été créée.',
-      );
+    try {
+      const session = await login.mutateAsync(values);
+      openSession(session);
+      void navigate('/session');
+    } catch (error) {
+      setNotice({
+        kind: 'danger',
+        text:
+          error instanceof LoginError
+            ? error.message
+            : 'Connexion impossible pour le moment. Veuillez réessayer.',
+      });
     }
   });
 
   return (
     <form onSubmit={(event) => void onSubmit(event)} noValidate className="flex flex-col gap-1">
       {notice && (
-        <Alert variant="info" className="mb-5">
-          {notice}
+        <Alert variant={notice.kind} className="mb-5">
+          {notice.text}
         </Alert>
       )}
+
+      <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+        <FormField fieldId="orgCode" label="Code organisation" error={errors.orgCode?.message}>
+          <Input
+            id="orgCode"
+            type="text"
+            autoComplete="organization"
+            placeholder="acme"
+            aria-invalid={errors.orgCode ? true : undefined}
+            aria-describedby={errors.orgCode ? fieldErrorId('orgCode') : undefined}
+            {...register('orgCode')}
+          />
+        </FormField>
+
+        <FormField fieldId="spaceCode" label="Code space" error={errors.spaceCode?.message}>
+          <Input
+            id="spaceCode"
+            type="text"
+            autoComplete="off"
+            placeholder="finance"
+            aria-invalid={errors.spaceCode ? true : undefined}
+            aria-describedby={errors.spaceCode ? fieldErrorId('spaceCode') : undefined}
+            {...register('spaceCode')}
+          />
+        </FormField>
+      </div>
 
       <FormField fieldId="email" label="Adresse courriel" error={errors.email?.message}>
         <Input
@@ -68,7 +107,10 @@ export function LoginForm() {
           <button
             type="button"
             onClick={() =>
-              setNotice('La récupération du mot de passe sera disponible dans un prochain récit.')
+              setNotice({
+                kind: 'info',
+                text: 'La récupération du mot de passe sera disponible dans un prochain récit.',
+              })
             }
             className="text-sm text-text-muted underline-offset-4 transition-colors duration-150 hover:text-primary hover:underline"
           >
