@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
-import type { LoginSession } from '@/features/authentication/model/login';
+import type { ActiveSession } from '@/features/authentication/model/login';
 import { SessionContext } from '@/shared/security/session-context';
 
 interface SessionProviderProps {
@@ -15,12 +15,12 @@ interface SessionProviderProps {
  * (récit TAKIBO UI 02) apportera la session durable côté serveur.
  */
 export function SessionProvider({ children }: SessionProviderProps) {
-  const [session, setSession] = useState<LoginSession | null>(null);
+  const [session, setSession] = useState<ActiveSession | null>(null);
 
   const state = useMemo(
     () => ({
       session,
-      openSession: (next: LoginSession) => setSession(next),
+      openSession: (next: ActiveSession) => setSession(next),
       closeSession: () => setSession(null),
     }),
     [session],

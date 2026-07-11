@@ -76,7 +76,7 @@ test.describe('Page de connexion TAKIBO', () => {
     await page.getByRole('button', { name: 'Se connecter' }).click();
 
     await expect(page).toHaveURL(/\/session$/);
-    await expect(page.getByRole('heading', { name: 'Connexion réussie' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Bienvenue, pi' })).toBeVisible();
     await expect(page.getByText('R_ORG_OWNER')).toBeVisible();
     await expect(page.getByText('G_SPACE_ADMINS')).toBeVisible();
     await expect(page.getByText('P_USER_WRITE')).toBeVisible();

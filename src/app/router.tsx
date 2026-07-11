@@ -12,11 +12,9 @@ import { AuthenticationLayout } from '@/layouts/AuthenticationLayout/Authenticat
 export const routes = [
   {
     element: <AuthenticationLayout />,
-    children: [
-      { path: '/login', element: <LoginPage /> },
-      { path: '/session', element: <SessionPage /> },
-    ],
+    children: [{ path: '/login', element: <LoginPage /> }],
   },
+  { path: '/session', element: <SessionPage /> },
   { path: '*', element: <Navigate to="/login" replace /> },
 ];
 

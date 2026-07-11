@@ -162,7 +162,7 @@ describe('LoginPage', () => {
     );
 
     resolveAuthentication?.();
-    expect(await screen.findByRole('heading', { name: 'Connexion réussie' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Bienvenue, pi' })).toBeVisible();
     expect(screen.getByText('R_ORG_OWNER')).toBeVisible();
     expect(screen.getByText('P_USER_READ')).toBeVisible();
   });

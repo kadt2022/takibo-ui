@@ -17,6 +17,16 @@ export interface LoginSession {
   userId: string;
 }
 
+/**
+ * Session active côté UI : la réponse de login enrichie du contexte
+ * saisi au formulaire, pour afficher des codes lisibles plutôt que des UUID.
+ */
+export interface ActiveSession extends LoginSession {
+  orgCode: string;
+  spaceCode: string;
+  email: string;
+}
+
 /** Claims situés du token humain TAKIBO (signé par TAS). */
 export interface TakiboTokenClaims {
   sub?: string;

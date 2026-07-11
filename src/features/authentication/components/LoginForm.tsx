@@ -40,7 +40,12 @@ export function LoginForm() {
     setNotice(null);
     try {
       const session = await login.mutateAsync(values);
-      openSession(session);
+      openSession({
+        ...session,
+        orgCode: values.orgCode,
+        spaceCode: values.spaceCode,
+        email: values.email,
+      });
       void navigate('/session');
     } catch (error) {
       setNotice({
