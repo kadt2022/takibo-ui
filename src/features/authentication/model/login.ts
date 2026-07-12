@@ -2,19 +2,22 @@ export interface LoginCredentials {
   email: string;
   password: string;
   orgCode: string;
-  spaceCode: string;
 }
 
-/** Contrat de POST /api/v1/auth/login (LoginResponse de TIS-CORE). */
+/**
+ * Contrat de POST /api/v1/auth/login (LoginResponse de TIS-CORE, IAM 31).
+ * En portée ORGANIZATION, spaceId et userId sont absents de la réponse :
+ * le user local est une réalité de space.
+ */
 export interface LoginSession {
   accessToken: string;
   tokenType: string;
   expiresIn: number;
   scopeLevel: string;
   organizationId: string;
-  spaceId: string;
   accountId: string;
-  userId: string;
+  spaceId?: string;
+  userId?: string;
 }
 
 /**
@@ -23,7 +26,6 @@ export interface LoginSession {
  */
 export interface ActiveSession extends LoginSession {
   orgCode: string;
-  spaceCode: string;
   email: string;
 }
 

@@ -71,18 +71,26 @@ Le frontend n'est jamais la frontière finale de sécurité.
   par un cookie sécurisé émis par le BFF Spring Boot (récit TAKIBO UI 02), qui dialoguera
   en OAuth2/OIDC avec le TAKIBO Authorization Server.
 
-## Première connexion réelle (récit 01.5 — mode direct provisoire)
+## Connexion organisationnelle (récit UI 01.6 — aligné IAM 31)
 
-Depuis le récit 01.5, le formulaire appelle réellement TIS-CORE
-(`POST /api/v1/auth/login`) via le proxy Vite (`/api` → `http://localhost:8081`).
-Le login TAKIBO est **situé** : il exige le code de l'organisation et le code du
-space en plus du courriel et du mot de passe. En cas de succès, l'écran `/session`
-montre le pouvoir effectif rendu par le token (rôles, groupes, permissions).
+> L'organisation identifie le compte. Le space situe l'action.
 
-Ce mode est **provisoire et assumé** : la session vit uniquement en mémoire React
-(un rafraîchissement la termine), aucun token n'est écrit dans le stockage
-navigateur. Le BFF Spring Boot (récit TAKIBO UI 02) apportera la session durable
-par cookie sécurisé.
+Le formulaire appelle réellement TIS-CORE (`POST /api/v1/auth/login`) via le
+proxy Vite (`/api` → `http://localhost:8081`) avec **trois champs** :
+organisation + courriel + mot de passe. En cas de succès, `/org` ouvre la
+**Console Organisation** : contexte de session, pouvoir organisationnel du
+token (rôles, groupes, permissions de scope ORGANIZATION uniquement) et la
+liste des spaces de l'organisation (surface TMS, autorité d'org requise —
+la liste personnelle d'un compte sans autorité arrivera avec IAM 32).
+L'entrée dans un space (échange de contexte) arrivera avec IAM 33.
+
+Tout échec de connexion affiche le même message — « Impossible de valider
+cette connexion. » — à l'image du 401 uniforme du backend (anti-énumération).
+
+Ce mode direct est **provisoire et assumé** : la session vit uniquement en
+mémoire React (un rafraîchissement la termine), aucun token n'est écrit dans
+le stockage navigateur. Le BFF Spring Boot (récit UI 02) apportera la session
+durable par cookie sécurisé.
 
 ### Tester en local
 
@@ -109,7 +117,7 @@ Invoke-RestMethod -Method Post -Uri http://localhost:8081/api/v1/orgs/signup `
 ```
 
 3. `npm run dev` puis se connecter sur `http://localhost:5173/login` avec
-   `takibo-demo` / `finance` / `founder@takibo.io` / `Str0ng!Passw0rd`.
+   `takibo-demo` / `founder@takibo.io` / `Str0ng!Passw0rd`.
 
 ## Hors périmètre
 

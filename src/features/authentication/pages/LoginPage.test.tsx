@@ -7,7 +7,8 @@ import { AppProviders } from '@/app/providers';
 import * as loginApi from '@/features/authentication/api/login-api';
 import type { LoginSession } from '@/features/authentication/model/login';
 import { LoginPage } from '@/features/authentication/pages/LoginPage';
-import { SessionPage } from '@/features/authentication/pages/SessionPage';
+import * as spacesApi from '@/features/organization/api/spaces-api';
+import { OrganizationConsolePage } from '@/features/organization/pages/OrganizationConsolePage';
 
 function makeFakeToken(claims: Record<string, unknown>): string {
   const encode = (value: unknown) =>
@@ -19,18 +20,17 @@ const fakeSession: LoginSession = {
   accessToken: makeFakeToken({
     subject_type: 'HUMAN',
     auth_method: 'PASSWORD',
+    takibo_scope_level: 'ORGANIZATION',
     roles: ['R_ORG_OWNER'],
-    groups: [],
-    permissions: ['P_USER_READ'],
+    groups: ['G_ORG_ADMINS'],
+    permissions: ['P_READ_ORG'],
     exp: 4102444800,
   }),
   tokenType: 'Bearer',
-  expiresIn: 900,
-  scopeLevel: 'SPACE',
+  expiresIn: 300,
+  scopeLevel: 'ORGANIZATION',
   organizationId: '11111111-1111-1111-1111-111111111111',
-  spaceId: '22222222-2222-2222-2222-222222222222',
   accountId: '33333333-3333-3333-3333-333333333333',
-  userId: '44444444-4444-4444-4444-444444444444',
 };
 
 function renderLoginPage() {
@@ -39,7 +39,7 @@ function renderLoginPage() {
       <MemoryRouter initialEntries={['/login']}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/session" element={<SessionPage />} />
+          <Route path="/org" element={<OrganizationConsolePage />} />
         </Routes>
       </MemoryRouter>
     </AppProviders>,
@@ -47,8 +47,7 @@ function renderLoginPage() {
 }
 
 async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText('Code organisation'), 'acme');
-  await user.type(screen.getByLabelText('Code space'), 'finance');
+  await user.type(screen.getByLabelText('Organisation'), 'takibo-demo');
   await user.type(screen.getByLabelText('Adresse courriel'), 'pi@takibo.io');
   await user.type(screen.getByLabelText('Mot de passe'), 'braise-et-frontieres');
 }
@@ -58,14 +57,14 @@ describe('LoginPage', () => {
     vi.restoreAllMocks();
   });
 
-  it('affiche la page de connexion TAKIBO', () => {
+  it('affiche la page de connexion TAKIBO à trois champs (IAM 31)', () => {
     renderLoginPage();
 
     expect(screen.getByRole('heading', { name: 'Bienvenue dans TAKIBO' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Code organisation')).toBeInTheDocument();
-    expect(screen.getByLabelText('Code space')).toBeInTheDocument();
+    expect(screen.getByLabelText('Organisation')).toBeInTheDocument();
     expect(screen.getByLabelText('Adresse courriel')).toBeInTheDocument();
     expect(screen.getByLabelText('Mot de passe')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Code space')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Se connecter' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Mot de passe oublié ?' })).toBeInTheDocument();
   });
@@ -74,8 +73,7 @@ describe('LoginPage', () => {
     const user = userEvent.setup();
     renderLoginPage();
 
-    await user.type(screen.getByLabelText('Code organisation'), 'acme');
-    await user.type(screen.getByLabelText('Code space'), 'finance');
+    await user.type(screen.getByLabelText('Organisation'), 'takibo-demo');
     await user.type(screen.getByLabelText('Adresse courriel'), 'pas-un-courriel');
     await user.type(screen.getByLabelText('Mot de passe'), 'secret');
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
@@ -91,8 +89,7 @@ describe('LoginPage', () => {
     const user = userEvent.setup();
     renderLoginPage();
 
-    await user.type(screen.getByLabelText('Code organisation'), 'acme');
-    await user.type(screen.getByLabelText('Code space'), 'finance');
+    await user.type(screen.getByLabelText('Organisation'), 'takibo-demo');
     await user.type(screen.getByLabelText('Adresse courriel'), 'pi@takibo.io');
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
 
@@ -101,7 +98,7 @@ describe('LoginPage', () => {
     expect(authenticateSpy).not.toHaveBeenCalled();
   });
 
-  it('exige les codes organisation et space', async () => {
+  it("exige le code de l'organisation", async () => {
     const authenticateSpy = vi.spyOn(loginApi, 'authenticate');
     const user = userEvent.setup();
     renderLoginPage();
@@ -111,7 +108,6 @@ describe('LoginPage', () => {
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     expect(await screen.findByText("Veuillez saisir le code de l'organisation.")).toBeVisible();
-    expect(screen.getByText('Veuillez saisir le code du space.')).toBeVisible();
     expect(authenticateSpy).not.toHaveBeenCalled();
   });
 
@@ -131,7 +127,7 @@ describe('LoginPage', () => {
     expect(passwordInput).toHaveValue('braise-et-frontieres');
   });
 
-  it('indique un état de chargement, empêche les soumissions multiples et ouvre la session (AC-09)', async () => {
+  it('indique un état de chargement, empêche les soumissions multiples et ouvre la console (AC-09)', async () => {
     let resolveAuthentication: (() => void) | undefined;
     const authenticateSpy = vi.spyOn(loginApi, 'authenticate').mockImplementation(
       () =>
@@ -139,6 +135,18 @@ describe('LoginPage', () => {
           resolveAuthentication = () => resolve(fakeSession);
         }),
     );
+    vi.spyOn(spacesApi, 'fetchOrganizationSpaces').mockResolvedValue({
+      kind: 'ok',
+      spaces: [
+        {
+          id: '22222222-2222-2222-2222-222222222222',
+          orgId: fakeSession.organizationId,
+          code: 'finance',
+          name: 'Finance',
+          status: 'ACTIVE',
+        },
+      ],
+    });
     const user = userEvent.setup();
     renderLoginPage();
 
@@ -155,21 +163,21 @@ describe('LoginPage', () => {
       {
         email: 'pi@takibo.io',
         password: 'braise-et-frontieres',
-        orgCode: 'acme',
-        spaceCode: 'finance',
+        orgCode: 'takibo-demo',
       },
       expect.anything(),
     );
 
     resolveAuthentication?.();
     expect(await screen.findByRole('heading', { name: 'Bienvenue, pi' })).toBeVisible();
+    expect(screen.getByText('Console Organisation')).toBeVisible();
     expect(screen.getByText('R_ORG_OWNER')).toBeVisible();
-    expect(screen.getByText('P_USER_READ')).toBeVisible();
+    expect(await screen.findByText('Finance')).toBeVisible();
   });
 
-  it('affiche le message utilisateur en cas d’échec de connexion', async () => {
+  it('affiche le message uniforme en cas d’échec de connexion', async () => {
     vi.spyOn(loginApi, 'authenticate').mockRejectedValue(
-      new loginApi.LoginError('Identifiants invalides.'),
+      new loginApi.LoginError('Impossible de valider cette connexion.'),
     );
     const user = userEvent.setup();
     renderLoginPage();
@@ -178,7 +186,19 @@ describe('LoginPage', () => {
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Identifiants invalides.');
+    expect(alert).toHaveTextContent('Impossible de valider cette connexion.');
     await waitFor(() => expect(screen.getByRole('button', { name: 'Se connecter' })).toBeEnabled());
+  });
+
+  it('explique honnêtement l’absence d’autorité sur la liste des spaces (IAM 32 à venir)', async () => {
+    vi.spyOn(loginApi, 'authenticate').mockResolvedValue(fakeSession);
+    vi.spyOn(spacesApi, 'fetchOrganizationSpaces').mockResolvedValue({ kind: 'no-authority' });
+    const user = userEvent.setup();
+    renderLoginPage();
+
+    await fillValidForm(user);
+    await user.click(screen.getByRole('button', { name: 'Se connecter' }));
+
+    expect(await screen.findByText(/récit IAM 32/)).toBeVisible();
   });
 });

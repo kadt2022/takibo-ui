@@ -2,8 +2,8 @@ import type { LoginCredentials, LoginSession } from '@/features/authentication/m
 
 /**
  * Erreur de connexion portant un message destiné à l'utilisateur.
- * Aucun détail technique du backend n'est exposé, et le message ne révèle
- * jamais si une adresse courriel existe (doctrine anti-énumération).
+ * IAM 31 : le backend est volontairement muet (401 uniforme, cause réelle en
+ * audit) — l'UI relaie cette uniformité sans inventer de détail.
  */
 export class LoginError extends Error {
   constructor(message: string) {
@@ -12,27 +12,16 @@ export class LoginError extends Error {
   }
 }
 
-function messageForStatus(status: number): string {
-  switch (status) {
-    case 400:
-    case 401:
-      return 'Identifiants invalides.';
-    case 403:
-      return 'Connexion refusée : ce compte ne peut pas accéder à ce space.';
-    case 404:
-      return 'Organisation ou space introuvable.';
-    default:
-      return 'Connexion impossible pour le moment. Veuillez réessayer.';
-  }
-}
+const UNIFORM_FAILURE_MESSAGE = 'Impossible de valider cette connexion.';
 
 /**
- * Login humain situé contre TIS-CORE (récit 01.5, mode direct provisoire).
+ * Login humain organisationnel contre TIS-CORE (récit IAM 31 / UI 01.6) :
+ * orgCode + email + password → token de portée ORGANIZATION.
  * En dev, /api est relayé vers takibo-iam-boot par le proxy Vite.
  *
  * Règles de sécurité : les identifiants ne sont jamais journalisés, jamais
  * placés dans une URL ; le token rendu ne doit jamais être persisté dans le
- * navigateur (session en mémoire uniquement, jusqu'au BFF du récit 02).
+ * navigateur (session en mémoire uniquement, jusqu'au BFF du récit UI 02).
  */
 export async function authenticate(credentials: LoginCredentials): Promise<LoginSession> {
   let response: Response;
@@ -47,7 +36,11 @@ export async function authenticate(credentials: LoginCredentials): Promise<Login
   }
 
   if (!response.ok) {
-    throw new LoginError(messageForStatus(response.status));
+    throw new LoginError(
+      response.status === 401 || response.status === 400
+        ? UNIFORM_FAILURE_MESSAGE
+        : 'Connexion impossible pour le moment. Veuillez réessayer.',
+    );
   }
 
   return (await response.json()) as LoginSession;

@@ -30,7 +30,7 @@ export function LoginForm() {
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '', orgCode: '', spaceCode: '' },
+    defaultValues: { email: '', password: '', orgCode: '' },
   });
 
   const onSubmit = handleSubmit(async (values) => {
@@ -43,10 +43,9 @@ export function LoginForm() {
       openSession({
         ...session,
         orgCode: values.orgCode,
-        spaceCode: values.spaceCode,
         email: values.email,
       });
-      void navigate('/session');
+      void navigate('/org');
     } catch (error) {
       setNotice({
         kind: 'danger',
@@ -66,31 +65,17 @@ export function LoginForm() {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-        <FormField fieldId="orgCode" label="Code organisation" error={errors.orgCode?.message}>
-          <Input
-            id="orgCode"
-            type="text"
-            autoComplete="organization"
-            placeholder="acme"
-            aria-invalid={errors.orgCode ? true : undefined}
-            aria-describedby={errors.orgCode ? fieldErrorId('orgCode') : undefined}
-            {...register('orgCode')}
-          />
-        </FormField>
-
-        <FormField fieldId="spaceCode" label="Code space" error={errors.spaceCode?.message}>
-          <Input
-            id="spaceCode"
-            type="text"
-            autoComplete="off"
-            placeholder="finance"
-            aria-invalid={errors.spaceCode ? true : undefined}
-            aria-describedby={errors.spaceCode ? fieldErrorId('spaceCode') : undefined}
-            {...register('spaceCode')}
-          />
-        </FormField>
-      </div>
+      <FormField fieldId="orgCode" label="Organisation" error={errors.orgCode?.message}>
+        <Input
+          id="orgCode"
+          type="text"
+          autoComplete="organization"
+          placeholder="Exemple : takibo"
+          aria-invalid={errors.orgCode ? true : undefined}
+          aria-describedby={errors.orgCode ? fieldErrorId('orgCode') : undefined}
+          {...register('orgCode')}
+        />
+      </FormField>
 
       <FormField fieldId="email" label="Adresse courriel" error={errors.email?.message}>
         <Input

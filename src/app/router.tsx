@@ -1,20 +1,20 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 
 import { LoginPage } from '@/features/authentication/pages/LoginPage';
-import { SessionPage } from '@/features/authentication/pages/SessionPage';
+import { OrganizationConsolePage } from '@/features/organization/pages/OrganizationConsolePage';
 import { AuthenticationLayout } from '@/layouts/AuthenticationLayout/AuthenticationLayout';
 
 /**
- * Routes de TAKIBO UI.
- * Sans session, toute entrée converge vers /login (AC-04). Les routes
- * protégées de la console arriveront avec les récits suivants.
+ * Routes de TAKIBO UI (récit UI 01.6).
+ * Sans session, toute entrée converge vers /login (AC-04). Après connexion :
+ * /org — la Console Organisation. La console de space arrivera avec IAM 33.
  */
 export const routes = [
   {
     element: <AuthenticationLayout />,
     children: [{ path: '/login', element: <LoginPage /> }],
   },
-  { path: '/session', element: <SessionPage /> },
+  { path: '/org', element: <OrganizationConsolePage /> },
   { path: '*', element: <Navigate to="/login" replace /> },
 ];
 
