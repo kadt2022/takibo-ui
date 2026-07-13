@@ -36,6 +36,14 @@
 
 @layer base {
   html {
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    html:not([data-theme='light']) {
+      color-scheme: dark;
+    }
+  }
+  html[data-theme='dark'] {
     color-scheme: dark;
   }
 

@@ -5,36 +5,40 @@
  * typographies et transitions de TAKIBO UI. Aucun composant ne doit
  * introduire de valeur brute : il consomme un token.
  *
- * Direction artistique : « le feu au centre des frontières ».
- * Nuit institutionnelle (bleus profonds), accent braise (ambre TAKIBO),
- * sobriété professionnelle.
+ * Direction artistique (adoptée juil. 2026, d'après les maquettes de Pi) :
+ * console d'administration professionnelle, système bi-thème. Primaire bleu
+ * confiant, cartes à ombre douce, sémantique nette. Le CLAIR est le défaut ;
+ * le SOMBRE est un thème de premier rang, pas une inversion naïve.
+ *
+ * Le thème suit `prefers-color-scheme`, et le bascule explicite
+ * `data-theme="light|dark"` sur <html> l'emporte dans les deux sens.
+ * Valeurs dérivées des maquettes ; à remplacer par les hex exacts du designer.
  */
 
 :root {
-  /* Couleurs — surfaces */
-  --tk-color-background: #0a101f;
-  --tk-color-surface: #101830;
-  --tk-color-surface-elevated: #17213e;
+  /* ── Thème CLAIR (défaut) ── */
+  --tk-color-background: #f3f5f9;
+  --tk-color-surface: #ffffff;
+  --tk-color-surface-elevated: #ffffff;
 
-  /* Couleurs — marque */
-  --tk-color-primary: #e8833a;
-  --tk-color-primary-hover: #f29752;
-  --tk-color-on-primary: #1c0f04;
+  --tk-color-primary: #2e6be6;
+  --tk-color-primary-hover: #2457c4;
+  --tk-color-on-primary: #ffffff;
 
-  /* Couleurs — texte */
-  --tk-color-text: #e9edf6;
-  --tk-color-text-muted: #98a2ba;
+  --tk-color-text: #1e293b;
+  --tk-color-text-muted: #64748b;
 
-  /* Couleurs — structure */
-  --tk-color-border: #2b3757;
-  --tk-color-focus: #f0a860;
+  --tk-color-border: #e4e8f0;
+  --tk-color-focus: #2e6be6;
 
-  /* Couleurs — états */
-  --tk-color-danger: #ff8482;
-  --tk-color-warning: #f5c451;
-  --tk-color-success: #5ed4a0;
+  --tk-color-danger: #dc2626;
+  --tk-color-warning: #d97706;
+  --tk-color-success: #16a34a;
 
-  /* Espacements */
+  --tk-shadow-card: 0 1px 2px rgb(16 24 40 / 0.05), 0 6px 16px -6px rgb(16 24 40 / 0.12);
+  --tk-shadow-focus: 0 0 0 3px rgb(46 107 230 / 0.22);
+
+  /* ── Tokens non chromatiques (communs aux deux thèmes) ── */
   --tk-spacing-1: 0.25rem;
   --tk-spacing-2: 0.5rem;
   --tk-spacing-3: 0.75rem;
@@ -44,16 +48,10 @@
   --tk-spacing-12: 3rem;
   --tk-spacing-16: 4rem;
 
-  /* Rayons */
-  --tk-radius-sm: 0.375rem;
-  --tk-radius-md: 0.625rem;
+  --tk-radius-sm: 0.5rem;
+  --tk-radius-md: 0.75rem;
   --tk-radius-lg: 1rem;
 
-  /* Ombres */
-  --tk-shadow-card: 0 20px 50px -20px rgb(3 6 14 / 0.7), 0 1px 0 0 rgb(255 255 255 / 0.04) inset;
-  --tk-shadow-focus: 0 0 0 3px rgb(240 168 96 / 0.35);
-
-  /* Typographie */
   --tk-font-sans:
     'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial,
     sans-serif;
@@ -67,7 +65,59 @@
   --tk-font-weight-semibold: 600;
   --tk-font-weight-bold: 700;
 
-  /* Transitions */
   --tk-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --tk-transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/*
+ * ── Thème SOMBRE ──
+ * Redéfinit UNIQUEMENT les tokens chromatiques. Appliqué quand l'OS est
+ * sombre (sauf bascule explicite vers le clair) ou quand data-theme="dark".
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --tk-color-background: #0b0f19;
+    --tk-color-surface: #121a2b;
+    --tk-color-surface-elevated: #172033;
+
+    --tk-color-primary: #3b82f6;
+    --tk-color-primary-hover: #60a5fa;
+    --tk-color-on-primary: #ffffff;
+
+    --tk-color-text: #e9edf6;
+    --tk-color-text-muted: #94a3b8;
+
+    --tk-color-border: #24314b;
+    --tk-color-focus: #60a5fa;
+
+    --tk-color-danger: #f87171;
+    --tk-color-warning: #fbbf24;
+    --tk-color-success: #34d399;
+
+    --tk-shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 28px -10px rgb(0 0 0 / 0.6);
+    --tk-shadow-focus: 0 0 0 3px rgb(96 165 250 / 0.3);
+  }
+}
+
+:root[data-theme='dark'] {
+  --tk-color-background: #0b0f19;
+  --tk-color-surface: #121a2b;
+  --tk-color-surface-elevated: #172033;
+
+  --tk-color-primary: #3b82f6;
+  --tk-color-primary-hover: #60a5fa;
+  --tk-color-on-primary: #ffffff;
+
+  --tk-color-text: #e9edf6;
+  --tk-color-text-muted: #94a3b8;
+
+  --tk-color-border: #24314b;
+  --tk-color-focus: #60a5fa;
+
+  --tk-color-danger: #f87171;
+  --tk-color-warning: #fbbf24;
+  --tk-color-success: #34d399;
+
+  --tk-shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 28px -10px rgb(0 0 0 / 0.6);
+  --tk-shadow-focus: 0 0 0 3px rgb(96 165 250 / 0.3);
 }
