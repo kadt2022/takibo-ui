@@ -160,7 +160,7 @@ export function OrgDashboardPage() {
       </section>
 
       {/* Graphiques */}
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.5fr_1fr_1fr]">
+      <section className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[1.5fr_1fr_1fr]">
         <Card className="p-5">
           <PanelHeader
             title="Activité de l’organisation"
@@ -178,14 +178,24 @@ export function OrgDashboardPage() {
           />
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-4">
           <PanelHeader title="Répartition des utilisateurs par rôle" />
-          <DonutChart segments={demoRoleDistribution} centerValue={342} centerLabel="Total" />
+          <DonutChart
+            segments={demoRoleDistribution}
+            centerValue={342}
+            centerLabel="Total"
+            size={128}
+          />
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-4">
           <PanelHeader title="Statut des Spaces" />
-          <DonutChart segments={demoSpaceStatusDistribution} centerValue={7} centerLabel="Total" />
+          <DonutChart
+            segments={demoSpaceStatusDistribution}
+            centerValue={7}
+            centerLabel="Total"
+            size={128}
+          />
         </Card>
       </section>
 

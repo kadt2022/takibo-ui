@@ -11,9 +11,9 @@ interface DonutChartProps {
  * Donut catégoriel (démonstration). Rendu SVG pur, couleurs de la palette
  * graphique — distinctes des tokens sémantiques.
  */
-export function DonutChart({ segments, centerValue, centerLabel, size = 168 }: DonutChartProps) {
+export function DonutChart({ segments, centerValue, centerLabel, size = 136 }: DonutChartProps) {
   const total = segments.reduce((sum, seg) => sum + seg.value, 0) || 1;
-  const stroke = 20;
+  const stroke = Math.max(14, Math.round(size * 0.12));
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const center = size / 2;
@@ -27,7 +27,7 @@ export function DonutChart({ segments, centerValue, centerLabel, size = 168 }: D
   });
 
   return (
-    <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
         <g transform={`rotate(-90 ${center} ${center})`}>
           <circle
@@ -57,7 +57,7 @@ export function DonutChart({ segments, centerValue, centerLabel, size = 168 }: D
           x={center}
           y={center - 2}
           textAnchor="middle"
-          className="fill-text font-mono text-2xl font-semibold"
+          className="fill-text font-mono text-xl font-semibold"
           style={{ fontVariantNumeric: 'tabular-nums' }}
         >
           {centerValue}
@@ -72,16 +72,15 @@ export function DonutChart({ segments, centerValue, centerLabel, size = 168 }: D
         </text>
       </svg>
 
-      <ul className="flex w-full flex-col gap-2.5">
+      <ul className="flex w-full flex-col gap-2">
         {segments.map((seg) => (
-          <li key={seg.label} className="flex items-center gap-2.5 text-sm">
-            <span
-              className="size-2.5 shrink-0 rounded-full"
-              style={{ backgroundColor: seg.color }}
-            />
+          <li key={seg.label} className="flex items-center gap-2 text-xs">
+            <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: seg.color }} />
             <span className="flex-1 text-text-muted">{seg.label}</span>
             <span className="font-medium text-text">{seg.pct}%</span>
-            <span className="w-10 text-right font-mono text-xs text-text-muted">({seg.value})</span>
+            <span className="w-8 text-right font-mono text-[11px] text-text-muted">
+              ({seg.value})
+            </span>
           </li>
         ))}
       </ul>
