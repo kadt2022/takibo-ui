@@ -11,4 +11,4 @@ export const loginSchema = z.object({
   orgCode: z.string().trim().min(1, "Veuillez saisir le code de l'organisation."),
 });
 
-export type LoginFormValues = z.infer<typeof loginSchema>;
+export type LoginCredentialsValues = z.infer<typeof loginSchema>;

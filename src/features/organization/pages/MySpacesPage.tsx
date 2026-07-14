@@ -1,6 +1,6 @@
 import { Card } from '@/design-system/components/Card';
 import { SpaceStatusPill } from '@/features/organization/components/SpaceStatusPill';
-import { demoSpaces } from '@/shared/demo/demo';
+import { demoAccessibleSpaces } from '@/shared/demo/demo';
 
 /**
  * « Mes Spaces accessibles » (récit UI 01 — présentation de démonstration).
@@ -30,7 +30,7 @@ export function MySpacesPage() {
               </tr>
             </thead>
             <tbody>
-              {demoSpaces.map((space) => (
+              {demoAccessibleSpaces.map((space) => (
                 <tr key={space.id} className="border-b border-border last:border-none">
                   <td className="px-5 py-3.5">
                     <span className="block font-medium text-text">{space.name}</span>
@@ -49,7 +49,8 @@ export function MySpacesPage() {
                     {space.selectable ? (
                       <button
                         type="button"
-                        className="rounded-md border border-primary/40 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+                        disabled
+                        className="rounded-md border border-primary/40 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent"
                         title="L'ouverture d'un contexte de space arrive au récit UI 05 (IAM 33)."
                       >
                         Ouvrir
@@ -67,7 +68,8 @@ export function MySpacesPage() {
 
       <p className="text-xs text-text-muted">
         L’ouverture d’un space établit un <strong className="text-text">contexte situé</strong>{' '}
-        (jeton de space) — cette étape arrivera au récit UI 05, après l’échange ORG → SPACE (IAM 33).
+        (jeton de space) — cette étape arrivera au récit UI 05, après l’échange ORG → SPACE (IAM
+        33).
       </p>
     </div>
   );

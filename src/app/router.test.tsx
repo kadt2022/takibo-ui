@@ -36,6 +36,7 @@ describe('router — shell UI 01', () => {
     expect(screen.getByRole('link', { name: 'Mes Spaces' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Gestion des Spaces' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Paramètres' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Créer un Space/ })).toBeDisabled();
   });
 
   it('redirige /app vers /app/dashboard', async () => {
@@ -44,7 +45,7 @@ describe('router — shell UI 01', () => {
     expect(router.state.location.pathname).toBe('/app/dashboard');
   });
 
-  it('navigue vers « Mes Spaces » et distingue les espaces ouvrables', async () => {
+  it('navigue vers « Mes Spaces » et garde l’ouverture de space désactivée', async () => {
     const user = userEvent.setup();
     renderAt('/app/dashboard');
 
@@ -52,8 +53,21 @@ describe('router — shell UI 01', () => {
 
     expect(await screen.findByRole('heading', { name: 'Mes Spaces' })).toBeInTheDocument();
     expect(screen.getByText('Finance')).toBeInTheDocument();
+    const [openButton] = screen.getAllByRole('button', { name: 'Ouvrir' });
+    expect(openButton).toBeDefined();
+    expect(openButton!).toBeDisabled();
     // Support est suspendu → non sélectionnable → « Indisponible ».
     expect(screen.getByText('Indisponible')).toBeInTheDocument();
+  });
+
+  it('garde la création de Space désactivée tant que le flux est absent', async () => {
+    const user = userEvent.setup();
+    renderAt('/app/dashboard');
+
+    await user.click(await screen.findByRole('link', { name: 'Gestion des Spaces' }));
+
+    expect(await screen.findByRole('heading', { name: 'Gestion des Spaces' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Créer un Space' })).toBeDisabled();
   });
 
   it('replie et déploie le menu latéral', async () => {

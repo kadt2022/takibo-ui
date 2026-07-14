@@ -7,22 +7,21 @@ interface LogoProps {
   className?: string;
 }
 
-/**
- * Logo TAKIBO fourni sous forme d'image de marque.
- * L'image contient deja le wordmark, donc withWordmark est conserve
- * seulement pour compatibilite avec les appels existants.
- */
-export function Logo({ size = 40, className }: LogoProps) {
-  const width = Math.round(size * 3.42);
+/** Logo TAKIBO : lockup complet avec wordmark, ou symbole seul. */
+export function Logo({ size = 40, withWordmark = true, className }: LogoProps) {
+  const width = withWordmark ? Math.round(size * 3.42) : size;
 
   return (
     <span className={cn('inline-flex items-center', className)}>
       <img
-        src="/takibo-logo.png"
+        src={withWordmark ? '/takibo-logo.png' : '/favicon.svg'}
         alt="TAKIBO"
         width={width}
         height={size}
-        className="block shrink-0 object-cover object-center"
+        className={cn(
+          'block shrink-0 object-center',
+          withWordmark ? 'object-cover' : 'object-contain',
+        )}
         style={{ width, height: size }}
       />
     </span>

@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/design-system/components/Button';
 import { Card } from '@/design-system/components/Card';
 import { SpaceStatusPill } from '@/features/organization/components/SpaceStatusPill';
-import { demoSpaces } from '@/shared/demo/demo';
+import { demoOrganizationSpaces } from '@/shared/demo/demo';
 
 /**
  * « Gestion des Spaces » (récit UI 01 — présentation de démonstration).
@@ -21,7 +21,7 @@ export function SpacesManagementPage() {
             Tous les espaces de l’organisation — vue réservée à l’autorité d’organisation.
           </p>
         </div>
-        <Button title="La création réelle sera branchée dans un récit ultérieur.">
+        <Button disabled title="La création réelle sera branchée dans un récit ultérieur.">
           <Plus className="size-4" aria-hidden="true" />
           Créer un Space
         </Button>
@@ -39,7 +39,7 @@ export function SpacesManagementPage() {
               </tr>
             </thead>
             <tbody>
-              {demoSpaces.map((space) => (
+              {demoOrganizationSpaces.map((space) => (
                 <tr key={space.id} className="border-b border-border last:border-none">
                   <td className="px-5 py-3.5 font-medium text-text">{space.name}</td>
                   <td className="px-5 py-3.5 font-mono text-xs text-text-muted">{space.code}</td>

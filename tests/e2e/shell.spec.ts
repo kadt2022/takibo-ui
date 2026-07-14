@@ -5,7 +5,7 @@ import { expect, test } from '@playwright/test';
  * données de démonstration. Ces tests vérifient la coquille et ses frontières.
  */
 test.describe('Shell TAKIBO (UI 01)', () => {
-  test("la racine mène au login, puis « Se connecter » ouvre le contexte Organisation", async ({
+  test('la racine mène au login, puis « Se connecter » ouvre le contexte Organisation', async ({
     page,
   }) => {
     await page.goto('/');
@@ -27,11 +27,12 @@ test.describe('Shell TAKIBO (UI 01)', () => {
     await expect(page).toHaveURL(/\/app\/my-spaces$/);
     await expect(page.getByRole('heading', { name: 'Mes Spaces' })).toBeVisible();
     await expect(page.getByText('Finance', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Ouvrir' }).first()).toBeDisabled();
     await expect(page.getByText('Indisponible')).toBeVisible();
 
     await page.getByRole('link', { name: 'Gestion des Spaces', exact: true }).click();
     await expect(page).toHaveURL(/\/app\/spaces$/);
-    await expect(page.getByRole('button', { name: 'Créer un Space' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Créer un Space' })).toBeDisabled();
 
     await page.getByRole('link', { name: 'Paramètres', exact: true }).click();
     await expect(page).toHaveURL(/\/app\/settings$/);
@@ -44,5 +45,18 @@ test.describe('Shell TAKIBO (UI 01)', () => {
 
     await page.getByRole('button', { name: 'Passer au thème clair' }).click();
     await expect(html).toHaveAttribute('data-theme', 'light');
+  });
+
+  test('le tiroir mobile reste complet même après un repli desktop', async ({ page }) => {
+    await page.goto('/app/dashboard');
+
+    await page.getByRole('button', { name: 'Réduire le menu' }).click();
+    await expect(page.getByRole('button', { name: 'Déployer le menu' })).toBeVisible();
+
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.getByRole('button', { name: 'Ouvrir le menu' }).click();
+
+    await expect(page.getByRole('link', { name: 'Gestion des Spaces', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Réduire le menu' })).toHaveCount(0);
   });
 });

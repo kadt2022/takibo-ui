@@ -30,8 +30,9 @@ export function AppShell() {
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-40 border-r border-border transition-[transform,width] duration-200',
+          'w-[260px]',
           'lg:static lg:z-auto lg:shrink-0 lg:translate-x-0',
-          collapsed ? 'w-[76px]' : 'w-[260px]',
+          collapsed ? 'lg:w-[76px]' : 'lg:w-[260px]',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         )}
       >
