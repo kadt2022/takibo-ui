@@ -1,16 +1,31 @@
-import { Bell, ChevronDown, FlaskConical, Menu, Moon, Search, Sun } from 'lucide-react';
+import { Bell, LogOut, Menu, Moon, Search, Sun, Timer } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import { ContextBadge } from '@/layouts/AppShell/ContextBadge';
 import { useIdentity } from '@/shared/identity/useIdentity';
+import { useSession } from '@/shared/security/session-context';
 import { useTheme } from '@/shared/theme/useTheme';
 
 interface TopBarProps {
   onOpenMenu: () => void;
 }
 
+/** Heure d'expiration de la preuve, dérivée purement de expiresAt. */
+function formatExpiry(expiresAt: number): string {
+  return new Date(expiresAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
 export function TopBar({ onOpenMenu }: TopBarProps) {
-  const { user, orgRole, context } = useIdentity();
+  const { email, roleLabel, roleCode, orgCode, organizationId, avatarInitial, context, expiresAt } =
+    useIdentity();
+  const { closeSession } = useSession();
+  const navigate = useNavigate();
   const { theme, toggle } = useTheme();
+
+  const logout = () => {
+    closeSession();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-surface/85 px-4 backdrop-blur-md sm:px-6">
@@ -35,11 +50,11 @@ export function TopBar({ onOpenMenu }: TopBarProps) {
 
       <div className="ml-auto flex items-center gap-2">
         <span
-          className="hidden items-center gap-1.5 rounded-full border border-warning/40 bg-warning/10 px-2.5 py-1 text-[11px] font-medium text-warning sm:inline-flex"
-          title="Récit UI 01 : le shell tourne sur des données de démonstration, sans backend."
+          className="hidden items-center gap-1.5 rounded-full border border-border bg-background/50 px-2.5 py-1 text-[11px] text-text-muted lg:inline-flex"
+          title="Heure d’expiration de la preuve de session."
         >
-          <FlaskConical className="size-3.5" aria-hidden="true" />
-          Démonstration
+          <Timer className="size-3.5" aria-hidden="true" />
+          Session jusqu’à {formatExpiry(expiresAt)}
         </span>
 
         <button
@@ -61,21 +76,30 @@ export function TopBar({ onOpenMenu }: TopBarProps) {
           aria-label="Notifications"
         >
           <Bell className="size-[18px]" aria-hidden="true" />
-          <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-danger text-[9px] font-bold text-white">
-            5
-          </span>
         </button>
 
-        <div className="flex items-center gap-2.5 rounded-full border border-border py-1 pl-1 pr-2.5">
+        <div
+          className="flex items-center gap-2.5 rounded-full border border-border py-1 pl-1 pr-2.5"
+          title={`${roleCode ?? 'sans rôle'} · organisation ${orgCode} (${organizationId})`}
+        >
           <span className="grid size-8 place-items-center rounded-full bg-primary text-xs font-semibold text-on-primary">
-            {user.initials}
+            {avatarInitial}
           </span>
-          <span className="hidden leading-tight sm:block">
-            <span className="block text-sm font-medium text-text">{user.name}</span>
-            <span className="block text-xs text-text-muted">{orgRole}</span>
+          <span className="hidden max-w-[180px] leading-tight sm:block">
+            <span className="block truncate text-sm font-medium text-text">{email}</span>
+            <span className="block truncate text-xs text-text-muted">{roleLabel}</span>
           </span>
-          <ChevronDown className="size-4 text-text-muted" aria-hidden="true" />
         </div>
+
+        <button
+          type="button"
+          onClick={logout}
+          className="grid size-9 place-items-center rounded-md border border-border text-text-muted hover:text-text"
+          aria-label="Se déconnecter"
+          title="Se déconnecter"
+        >
+          <LogOut className="size-[18px]" aria-hidden="true" />
+        </button>
       </div>
     </header>
   );

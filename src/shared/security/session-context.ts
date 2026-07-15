@@ -1,11 +1,11 @@
 import { createContext, useContext } from 'react';
 
-import type { ActiveSession } from '@/features/authentication/model/login';
+import type { OrganizationSession } from '@/features/authentication/model/login';
 
 export interface SessionState {
   /** Session courante, gardée en mémoire uniquement (jamais persistée). */
-  session: ActiveSession | null;
-  openSession: (session: ActiveSession) => void;
+  session: OrganizationSession | null;
+  openSession: (session: OrganizationSession) => void;
   closeSession: () => void;
 }
 

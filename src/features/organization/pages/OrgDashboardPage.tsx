@@ -19,6 +19,7 @@ import type { ComponentType, ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { Card } from '@/design-system/components/Card';
+import { DemoTag } from '@/design-system/components/DemoTag';
 import { ActivityChart } from '@/features/organization/components/ActivityChart';
 import { DonutChart } from '@/features/organization/components/DonutChart';
 import { SpaceStatusPill } from '@/features/organization/components/SpaceStatusPill';
@@ -65,10 +66,21 @@ const notificationDot: Record<NotificationSeverity, string> = {
   low: 'bg-primary',
 };
 
-function PanelHeader({ title, action }: { title: string; action?: ReactNode }) {
+function PanelHeader({
+  title,
+  action,
+  demo = false,
+}: {
+  title: string;
+  action?: ReactNode;
+  demo?: boolean;
+}) {
   return (
     <div className="mb-4 flex items-center justify-between gap-3">
-      <h2 className="text-base font-semibold text-text">{title}</h2>
+      <div className="flex min-w-0 items-center gap-2">
+        <h2 className="text-base font-semibold text-text">{title}</h2>
+        {demo && <DemoTag />}
+      </div>
       {action}
     </div>
   );
@@ -129,7 +141,7 @@ function QuickAction({
 }
 
 export function OrgDashboardPage() {
-  const { user, organization } = useIdentity();
+  const { email, orgCode, roleLabel } = useIdentity();
   const navigate = useNavigate();
 
   return (
@@ -137,9 +149,9 @@ export function OrgDashboardPage() {
       {/* En-tête */}
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-text">Bienvenue, {user.name} 👋</h1>
+          <h1 className="text-2xl font-bold text-text">Bienvenue, {email} 👋</h1>
           <p className="mt-1 text-sm text-text-muted">
-            Vue d’ensemble de votre organisation : {organization.name}
+            Contexte : Organisation · {orgCode} — {roleLabel}
           </p>
         </div>
         <button
@@ -152,11 +164,20 @@ export function OrgDashboardPage() {
         </button>
       </header>
 
-      {/* KPI */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {demoKpis.map((kpi) => (
-          <KpiTile key={kpi.key} kpi={kpi} />
-        ))}
+      {/* KPI — encore simulés : ces compteurs sont situés par Space (users,
+          rôles, groupes) ou attendent un read-side organisationnel (OAuth2). */}
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+            Indicateurs
+          </h2>
+          <DemoTag />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {demoKpis.map((kpi) => (
+            <KpiTile key={kpi.key} kpi={kpi} />
+          ))}
+        </div>
       </section>
 
       {/* Graphiques */}
@@ -164,6 +185,7 @@ export function OrgDashboardPage() {
         <Card className="p-5">
           <PanelHeader
             title="Activité de l’organisation"
+            demo
             action={
               <span className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs text-text-muted">
                 7 derniers jours
@@ -179,7 +201,7 @@ export function OrgDashboardPage() {
         </Card>
 
         <Card className="p-4">
-          <PanelHeader title="Répartition des utilisateurs par rôle" />
+          <PanelHeader title="Répartition des utilisateurs par rôle" demo />
           <DonutChart
             segments={demoRoleDistribution}
             centerValue={342}
@@ -189,7 +211,7 @@ export function OrgDashboardPage() {
         </Card>
 
         <Card className="p-4">
-          <PanelHeader title="Statut des Spaces" />
+          <PanelHeader title="Statut des Spaces" demo />
           <DonutChart
             segments={demoSpaceStatusDistribution}
             centerValue={7}
@@ -203,7 +225,7 @@ export function OrgDashboardPage() {
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-3">
         {/* Mes Spaces accessibles */}
         <Card className="flex flex-col p-5">
-          <PanelHeader title="Mes Spaces accessibles" />
+          <PanelHeader title="Mes Spaces accessibles" demo />
           <div className="-mx-2 overflow-x-auto">
             <table className="w-full min-w-[380px] text-sm">
               <thead>
@@ -226,7 +248,7 @@ export function OrgDashboardPage() {
                         <span className="min-w-0">
                           <span className="block truncate font-medium text-text">{space.name}</span>
                           <span className="block truncate text-xs text-text-muted">
-                            {space.code}.{organization.domain}
+                            {space.code}
                           </span>
                         </span>
                       </span>
@@ -268,6 +290,7 @@ export function OrgDashboardPage() {
         <Card className="p-5">
           <PanelHeader
             title="Activités récentes"
+            demo
             action={
               <button type="button" className="text-xs font-medium text-primary hover:underline">
                 Voir tout
@@ -341,6 +364,7 @@ export function OrgDashboardPage() {
           <Card className="p-5">
             <PanelHeader
               title="Notifications"
+              demo
               action={
                 <button type="button" className="text-xs font-medium text-primary hover:underline">
                   Voir tout
@@ -363,8 +387,9 @@ export function OrgDashboardPage() {
       </section>
 
       <p className="text-center text-xs text-text-muted">
-        Récit UI 01 — les données de ce tableau de bord sont des exemples de démonstration, pas
-        encore issues de TAKIBO.
+        Votre identité et votre session sont réelles. Les indicateurs, graphiques et listes marqués
+        « Démonstration » ne sont pas encore issus de TAKIBO — ils arrivent aux récits UI 03 et
+        suivants.
       </p>
     </div>
   );

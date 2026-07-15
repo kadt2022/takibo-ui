@@ -1,14 +1,11 @@
 /*
  * Données de DÉMONSTRATION du shell TAKIBO (récits UI 01+).
  * ---------------------------------------------------------
- * Aucun appel backend : tout ce qu'affiche le tableau de bord vient d'ici et
- * doit être présenté comme démonstration (badge visible dans la topbar). Le
- * vrai login arrive au récit UI 02, la vraie liste des spaces au récit UI 03 ;
- * ils remplaceront cet adapter, pas le shell.
+ * Les métriques et listes du tableau de bord viennent d'ici et sont présentées
+ * comme démonstration (badge « Démonstration » sur chaque surface concernée).
+ * Le login et la session sont désormais réels (récit UI 02) ; la vraie liste des
+ * spaces arrive au récit UI 03. Ces sources remplaceront cet adapter, pas le shell.
  */
-
-/** Marqueur global : le shell tourne sur des données locales. */
-export const IS_DEMO = true;
 
 export type SpaceStatus = 'ACTIVE' | 'SUSPENDED' | 'CREATING' | 'DISABLED';
 
@@ -21,13 +18,6 @@ export const chartPalette = {
   sky: '#38bdf8',
   violet: '#8b5cf6',
 } as const;
-
-export interface DemoIdentity {
-  user: { name: string; email: string; initials: string };
-  organization: { code: string; name: string; domain: string };
-  orgRole: string;
-  context: 'ORGANIZATION';
-}
 
 export interface DemoOrganizationSpace {
   id: string;
@@ -42,13 +32,6 @@ export interface DemoAccessibleSpace extends DemoOrganizationSpace {
   role: string;
   selectable: boolean;
 }
-
-export const demoIdentity: DemoIdentity = {
-  user: { name: 'John Doe', email: 'john.doe@acme.com', initials: 'JD' },
-  organization: { code: 'acme', name: 'ACME Corporation', domain: 'acme.com' },
-  orgRole: 'Org Admin',
-  context: 'ORGANIZATION',
-};
 
 /**
  * Future source GET /api/v1/me/spaces : uniquement les spaces accessibles au
