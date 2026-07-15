@@ -33,6 +33,8 @@ import {
   demoSpaceStatusDistribution,
 } from '@/shared/demo/demo';
 import type { ActivitySeverity, DemoKpi, NotificationSeverity } from '@/shared/demo/demo';
+import { useOrganizationSpaces } from '@/features/spaces/hooks/use-organization-spaces';
+import { isOrgAdmin } from '@/shared/identity/roles';
 import { useIdentity } from '@/shared/identity/useIdentity';
 import { cn } from '@/shared/utilities/cn';
 
@@ -141,7 +143,11 @@ function QuickAction({
 }
 
 export function OrgDashboardPage() {
-  const { email, orgCode, roleLabel } = useIdentity();
+  const { email, orgCode, roleLabel, roles } = useIdentity();
+  const admin = isOrgAdmin(roles);
+  // Le seul compteur réel disponible en portée ORGANIZATION : le total des Spaces
+  // de l'inventaire administratif (autorité ORG requise). Les autres restent démo.
+  const orgSpaces = useOrganizationSpaces({ page: 0, size: 1 }, { enabled: admin });
   const navigate = useNavigate();
 
   return (
@@ -164,8 +170,31 @@ export function OrgDashboardPage() {
         </button>
       </header>
 
-      {/* KPI — encore simulés : ces compteurs sont situés par Space (users,
-          rôles, groupes) ou attendent un read-side organisationnel (OAuth2). */}
+      {/* Indicateur RÉEL (autorité ORG) : total des Spaces de l'organisation. */}
+      {admin && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
+            Indicateur réel
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Card className="flex items-start gap-4 p-5">
+              <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
+                <Layers className="size-6" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm text-text-muted">Spaces</p>
+                <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-text">
+                  {orgSpaces.isPending ? '…' : (orgSpaces.data?.totalElements ?? '—')}
+                </p>
+                <p className="mt-0.5 text-xs text-text-muted">dans l’organisation</p>
+              </div>
+            </Card>
+          </div>
+        </section>
+      )}
+
+      {/* KPI encore simulés : situés par Space (users, rôles, groupes) ou en
+          attente d'un read-side organisationnel (clients OAuth2). */}
       <section className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
@@ -173,10 +202,12 @@ export function OrgDashboardPage() {
           </h2>
           <DemoTag />
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {demoKpis.map((kpi) => (
-            <KpiTile key={kpi.key} kpi={kpi} />
-          ))}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {demoKpis
+            .filter((kpi) => kpi.key !== 'spaces')
+            .map((kpi) => (
+              <KpiTile key={kpi.key} kpi={kpi} />
+            ))}
         </div>
       </section>
 
