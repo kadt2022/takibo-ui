@@ -39,6 +39,10 @@
     color-scheme: dark;
   }
 
+  html[data-theme='light'] {
+    color-scheme: light;
+  }
+
   body {
     @apply bg-background font-sans text-text antialiased;
   }
