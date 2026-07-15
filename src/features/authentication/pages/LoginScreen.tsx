@@ -34,16 +34,28 @@ export function LoginScreen() {
         </header>
 
         <Alert variant="info" className="mb-6">
-          Aperçu de démonstration — la connexion réelle sera branchée au récit UI 02. « Se
-          connecter » ouvre le shell sur l’organisation de démonstration.
+          Aperçu de démonstration — la connexion réelle sera branchée au récit UI 02. « Se connecter
+          » ouvre le shell sur l’organisation de démonstration.
         </Alert>
 
         <form onSubmit={enterShell} className="flex flex-col gap-1" noValidate>
           <FormField fieldId="orgCode" label="Organisation">
-            <Input id="orgCode" type="text" autoComplete="organization" defaultValue={demoIdentity.organization.code} placeholder="Exemple : takibo" />
+            <Input
+              id="orgCode"
+              type="text"
+              autoComplete="organization"
+              defaultValue={demoIdentity.organization.code}
+              placeholder="Exemple : takibo"
+            />
           </FormField>
           <FormField fieldId="email" label="Adresse courriel">
-            <Input id="email" type="email" autoComplete="email" defaultValue={demoIdentity.user.email} placeholder="prenom.nom@organisation.com" />
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              defaultValue={demoIdentity.user.email}
+              placeholder="prenom.nom@organisation.com"
+            />
           </FormField>
           <FormField fieldId="password" label="Mot de passe">
             <PasswordInput id="password" defaultValue="demonstration" placeholder="••••••••••••" />

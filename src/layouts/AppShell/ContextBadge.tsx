@@ -23,7 +23,9 @@ export function ContextBadge({ scope, className }: ContextBadgeProps) {
     >
       <Building2 className="size-4 text-primary" aria-hidden="true" />
       <span className="flex flex-col leading-none">
-        <span className="text-[10px] uppercase tracking-wider text-text-muted">Contexte actuel</span>
+        <span className="text-[10px] uppercase tracking-wider text-text-muted">
+          Contexte actuel
+        </span>
         <span className="mt-0.5 text-xs font-semibold text-text">{label}</span>
       </span>
     </div>
