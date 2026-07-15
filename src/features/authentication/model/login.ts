@@ -20,22 +20,15 @@ export interface LoginSession {
   userId?: string;
 }
 
-/**
- * Session active côté UI : la réponse de login enrichie du contexte
- * saisi au formulaire, pour afficher des codes lisibles plutôt que des UUID.
- */
-export interface ActiveSession extends LoginSession {
-  orgCode: string;
-  email: string;
-}
-
 /** Claims situés du token humain TAKIBO (signé par TAS). */
 export interface TakiboTokenClaims {
   sub?: string;
   exp?: number;
+  iat?: number;
   subject_type?: string;
   auth_method?: string;
   takibo_scope_level?: string;
+  takibo_tenant_source?: string;
   org_id?: string;
   space_id?: string;
   account_id?: string;
@@ -43,4 +36,31 @@ export interface TakiboTokenClaims {
   roles?: string[];
   groups?: string[];
   permissions?: string[];
+}
+
+/**
+ * Couture unique de session côté UI (récit UI 02) : la LoginResponse + le
+ * contexte saisi au formulaire + les claims validés, réunis en un seul objet.
+ * Le shell consomme CETTE abstraction ; aucun composant ne redécode le JWT.
+ *
+ * Deux registres d'identité d'organisation, jamais confondus :
+ *   - {@link orgCode} lisible (saisi au login, langage TIS-CORE) ;
+ *   - {@link organizationId} UUID (routes TMS machine-first).
+ */
+export interface OrganizationSession {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  /** Epoch ms d'expiration de la preuve (claim exp si présent, sinon expiresIn). */
+  expiresAt: number;
+  scopeLevel: 'ORGANIZATION';
+  orgCode: string;
+  organizationId: string;
+  accountId: string;
+  email: string;
+  subjectType: 'HUMAN';
+  authMethod: string;
+  roles: string[];
+  groups: string[];
+  permissions: string[];
 }

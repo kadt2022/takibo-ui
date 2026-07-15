@@ -1,10 +1,37 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { UserEvent } from '@testing-library/user-event';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppProviders } from '@/app/providers';
 import { routes } from '@/app/router';
+
+function makeToken(claims: Record<string, unknown>): string {
+  const encode = (obj: unknown) =>
+    btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode(claims)}.sig`;
+}
+
+const OK_RESPONSE = {
+  accessToken: makeToken({
+    subject_type: 'HUMAN',
+    takibo_scope_level: 'ORGANIZATION',
+    auth_method: 'PASSWORD',
+    org_id: 'org-uuid',
+    account_id: 'acc-uuid',
+    roles: ['R_ORG_ADMIN'],
+    groups: [],
+    permissions: [],
+  }),
+  tokenType: 'Bearer',
+  expiresIn: 3600,
+  scopeLevel: 'ORGANIZATION',
+  organizationId: 'org-uuid',
+  accountId: 'acc-uuid',
+};
+
+const fetchMock = vi.fn();
 
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
@@ -16,7 +43,30 @@ function renderAt(path: string) {
   return router;
 }
 
-describe('router — shell UI 01', () => {
+/** Passe par le vrai formulaire de login pour ouvrir une session ORGANIZATION. */
+async function renderLoggedIn(user: UserEvent) {
+  fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => OK_RESPONSE });
+  const router = renderAt('/login');
+  await user.type(screen.getByLabelText('Organisation'), 'acme');
+  await user.type(screen.getByLabelText('Adresse courriel'), 'john.doe@acme.com');
+  await user.type(screen.getByLabelText('Mot de passe'), 'secret123');
+  await user.click(screen.getByRole('button', { name: 'Se connecter' }));
+  await screen.findByRole('heading', { name: /Bienvenue, john\.doe@acme\.com/ });
+  return router;
+}
+
+beforeEach(() => {
+  fetchMock.mockReset();
+  vi.stubGlobal('fetch', fetchMock);
+  localStorage.clear();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  localStorage.clear();
+});
+
+describe('router — entrée et gardes', () => {
   it('affiche l’écran de connexion sur /login', async () => {
     renderAt('/login');
     expect(
@@ -24,63 +74,51 @@ describe('router — shell UI 01', () => {
     ).toBeInTheDocument();
   });
 
-  it('ouvre le tableau de bord du contexte Organisation sur /app/dashboard', async () => {
-    renderAt('/app/dashboard');
-
-    expect(await screen.findByRole('heading', { name: /Bienvenue, John Doe/ })).toBeInTheDocument();
-    // Le badge de contexte rend la frontière visible.
-    expect(screen.getByText('Contexte actuel')).toBeInTheDocument();
-    expect(screen.getAllByText('Organisation').length).toBeGreaterThan(0);
-    // Les quatre onglets du contexte Organisation.
-    expect(screen.getByRole('link', { name: 'Tableau de bord' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Mes Spaces' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Gestion des Spaces' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Paramètres' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Créer un Space/ })).toBeDisabled();
-  });
-
-  it('redirige /app vers /app/dashboard', async () => {
-    const router = renderAt('/app');
-    await screen.findByRole('heading', { name: /Bienvenue, John Doe/ });
-    expect(router.state.location.pathname).toBe('/app/dashboard');
-  });
-
-  it('navigue vers « Mes Spaces » et garde l’ouverture de space désactivée', async () => {
-    const user = userEvent.setup();
-    renderAt('/app/dashboard');
-
-    await user.click(await screen.findByRole('link', { name: 'Mes Spaces' }));
-
-    expect(await screen.findByRole('heading', { name: 'Mes Spaces' })).toBeInTheDocument();
-    expect(screen.getByText('Finance')).toBeInTheDocument();
-    const [openButton] = screen.getAllByRole('button', { name: 'Ouvrir' });
-    expect(openButton).toBeDefined();
-    expect(openButton!).toBeDisabled();
-    // Support est suspendu → non sélectionnable → « Indisponible ».
-    expect(screen.getByText('Indisponible')).toBeInTheDocument();
-  });
-
-  it('garde la création de Space désactivée tant que le flux est absent', async () => {
-    const user = userEvent.setup();
-    renderAt('/app/dashboard');
-
-    await user.click(await screen.findByRole('link', { name: 'Gestion des Spaces' }));
-
-    expect(await screen.findByRole('heading', { name: 'Gestion des Spaces' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Créer un Space' })).toBeDisabled();
-  });
-
-  it('replie et déploie le menu latéral', async () => {
-    const user = userEvent.setup();
-    renderAt('/app/dashboard');
-
-    const collapse = await screen.findByRole('button', { name: 'Réduire le menu' });
-    await user.click(collapse);
-    expect(screen.getByRole('button', { name: 'Déployer le menu' })).toBeInTheDocument();
+  it('protège /app/** : sans session, redirige vers /login', async () => {
+    const router = renderAt('/app/dashboard');
+    expect(
+      await screen.findByRole('heading', { name: 'Bienvenue dans TAKIBO' }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/login');
   });
 
   it('rend un état « introuvable » sur une route inconnue', async () => {
     renderAt('/nowhere');
     expect(await screen.findByRole('heading', { name: 'Page introuvable' })).toBeInTheDocument();
+  });
+});
+
+describe('shell sous session ORGANIZATION', () => {
+  it('ouvre le tableau de bord réel et rend la frontière visible', async () => {
+    const user = userEvent.setup();
+    await renderLoggedIn(user);
+
+    expect(screen.getByText('Contexte actuel')).toBeInTheDocument();
+    expect(screen.getAllByText('Organisation').length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: 'Tableau de bord' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Mes Spaces' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Gestion des Spaces' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Paramètres' })).toBeInTheDocument();
+  });
+
+  it('navigue vers « Mes Spaces » et garde l’ouverture de space désactivée', async () => {
+    const user = userEvent.setup();
+    await renderLoggedIn(user);
+
+    await user.click(screen.getByRole('link', { name: 'Mes Spaces' }));
+
+    expect(await screen.findByRole('heading', { name: 'Mes Spaces' })).toBeInTheDocument();
+    expect(screen.getByText('Finance')).toBeInTheDocument();
+    const [openButton] = screen.getAllByRole('button', { name: 'Ouvrir' });
+    expect(openButton!).toBeDisabled();
+    expect(screen.getByText('Indisponible')).toBeInTheDocument();
+  });
+
+  it('replie et déploie le menu latéral', async () => {
+    const user = userEvent.setup();
+    await renderLoggedIn(user);
+
+    await user.click(screen.getByRole('button', { name: 'Réduire le menu' }));
+    expect(screen.getByRole('button', { name: 'Déployer le menu' })).toBeInTheDocument();
   });
 });

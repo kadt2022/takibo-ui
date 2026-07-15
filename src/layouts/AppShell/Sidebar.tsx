@@ -13,7 +13,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggleCollapsed, onNavigate }: SidebarProps) {
-  const { user, organization } = useIdentity();
+  const { email, orgCode, organizationId, avatarInitial, roleLabel } = useIdentity();
 
   return (
     <div className="flex h-full flex-col gap-5 bg-surface p-3">
@@ -34,22 +34,21 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate }: SidebarPro
         )}
       </div>
 
-      {/* Organisation courante (une seule — pas un sélecteur multi-org) */}
+      {/* Organisation courante (une seule — pas un sélecteur multi-org).
+          Code lisible en clair, UUID technique en info-bulle. */}
       <div
         className={cn(
           'flex items-center gap-3 rounded-md border border-border bg-background/40 p-2.5',
           collapsed && 'lg:justify-center',
         )}
-        title={`${organization.name} · ${organization.domain}`}
+        title={`Organisation ${orgCode} · ${organizationId}`}
       >
         <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/12 text-primary">
           <Building2 className="size-4" aria-hidden="true" />
         </span>
         <span className={cn('min-w-0 leading-tight', collapsed && 'lg:hidden')}>
-          <span className="block truncate text-sm font-semibold text-text">
-            {organization.name}
-          </span>
-          <span className="block truncate text-xs text-text-muted">{organization.domain}</span>
+          <span className="block truncate text-sm font-semibold text-text">{orgCode}</span>
+          <span className="block truncate text-xs text-text-muted">Organisation</span>
         </span>
       </div>
 
@@ -94,11 +93,11 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate }: SidebarPro
           )}
         >
           <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-on-primary">
-            {user.initials}
+            {avatarInitial}
           </span>
           <span className={cn('min-w-0 leading-tight', collapsed && 'lg:hidden')}>
-            <span className="block truncate text-sm font-medium text-text">{user.name}</span>
-            <span className="block truncate text-xs text-text-muted">{organization.name}</span>
+            <span className="block truncate text-sm font-medium text-text">{email}</span>
+            <span className="block truncate text-xs text-text-muted">{roleLabel}</span>
           </span>
         </div>
         <button
