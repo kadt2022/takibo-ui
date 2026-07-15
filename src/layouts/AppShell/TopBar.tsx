@@ -28,7 +28,9 @@ export function TopBar({ onOpenMenu }: TopBarProps) {
       <div className="ml-1 hidden max-w-md flex-1 items-center gap-2 rounded-full border border-border bg-background/50 px-3.5 py-2 text-sm text-text-muted md:flex">
         <Search className="size-4" aria-hidden="true" />
         <span>Rechercher…</span>
-        <kbd className="ml-auto rounded border border-border px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd>
+        <kbd className="ml-auto rounded border border-border px-1.5 py-0.5 font-mono text-[10px]">
+          ⌘K
+        </kbd>
       </div>
 
       <div className="ml-auto flex items-center gap-2">
