@@ -24,3 +24,12 @@ export function primaryOrgRole(roles: string[]): OrgRole {
   }
   return { code, label: ORG_ROLE_LABELS[code] ?? code };
 }
+
+/**
+ * Autorité d'organisation : seul R_ORG_OWNER / R_ORG_ADMIN voit l'inventaire
+ * administratif des Spaces. Un R_SPACE_ADMIN seul ne l'est pas (sa frontière est
+ * un Space, pas l'organisation).
+ */
+export function isOrgAdmin(roles: string[]): boolean {
+  return roles.includes('R_ORG_OWNER') || roles.includes('R_ORG_ADMIN');
+}

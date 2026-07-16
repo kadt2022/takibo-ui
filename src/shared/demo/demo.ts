@@ -7,7 +7,7 @@
  * spaces arrive au récit UI 03. Ces sources remplaceront cet adapter, pas le shell.
  */
 
-export type SpaceStatus = 'ACTIVE' | 'SUSPENDED' | 'CREATING' | 'DISABLED';
+import type { SpaceStatus } from '@/features/spaces/model/space';
 
 /** Palette catégorielle des graphiques (distincte des tokens sémantiques). */
 export const chartPalette = {

@@ -1,4 +1,4 @@
-import type { SpaceStatus } from '@/shared/demo/demo';
+import type { SpaceStatus } from '@/features/spaces/model/space';
 import { cn } from '@/shared/utilities/cn';
 
 const STATUS: Record<SpaceStatus, { label: string; className: string }> = {

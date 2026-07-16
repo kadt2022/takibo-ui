@@ -43,9 +43,52 @@ function renderAt(path: string) {
   return router;
 }
 
+const ME_SPACES_RESPONSE = {
+  organizationId: 'org-uuid',
+  items: [
+    {
+      spaceId: 's1',
+      code: 'finance',
+      name: 'Finance',
+      userId: 'u1',
+      spaceStatus: 'ACTIVE',
+      userStatus: 'ACTIVE',
+      selectable: true,
+    },
+    {
+      spaceId: 's2',
+      code: 'support',
+      name: 'Support',
+      userId: 'u1',
+      spaceStatus: 'SUSPENDED',
+      userStatus: 'ACTIVE',
+      selectable: false,
+    },
+  ],
+};
+
+const ORG_SPACES_RESPONSE = {
+  content: [],
+  page: 0,
+  size: 1,
+  totalElements: 3,
+  totalPages: 3,
+};
+
+/** Dispatch par URL : login, /me/spaces, inventaire org. */
+function routedFetch(url: string) {
+  const body =
+    url === '/api/v1/me/spaces'
+      ? ME_SPACES_RESPONSE
+      : url.startsWith('/api/v1/orgs/')
+        ? ORG_SPACES_RESPONSE
+        : OK_RESPONSE;
+  return Promise.resolve({ ok: true, status: 200, json: async () => body });
+}
+
 /** Passe par le vrai formulaire de login pour ouvrir une session ORGANIZATION. */
 async function renderLoggedIn(user: UserEvent) {
-  fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => OK_RESPONSE });
+  fetchMock.mockImplementation((url: string) => routedFetch(url));
   const router = renderAt('/login');
   await user.type(screen.getByLabelText('Organisation'), 'acme');
   await user.type(screen.getByLabelText('Adresse courriel'), 'john.doe@acme.com');

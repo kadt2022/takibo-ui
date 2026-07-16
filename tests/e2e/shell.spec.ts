@@ -12,36 +12,98 @@ function makeToken(claims: Record<string, unknown>): string {
   return `${b64({ alg: 'none', typ: 'JWT' })}.${b64(claims)}.sig`;
 }
 
-const LOGIN_RESPONSE = {
-  accessToken: makeToken({
-    subject_type: 'HUMAN',
-    takibo_scope_level: 'ORGANIZATION',
-    auth_method: 'PASSWORD',
-    org_id: '9eb7b8d5-79c8-4ac5-b4b8-b61ad332390f',
-    account_id: 'a1b2c3d4-0000-0000-0000-000000000000',
-    roles: ['R_ORG_ADMIN'],
-    groups: [],
-    permissions: [],
-  }),
-  tokenType: 'Bearer',
-  expiresIn: 3600,
-  scopeLevel: 'ORGANIZATION',
-  organizationId: '9eb7b8d5-79c8-4ac5-b4b8-b61ad332390f',
-  accountId: 'a1b2c3d4-0000-0000-0000-000000000000',
-};
+const ORG_ID = '9eb7b8d5-79c8-4ac5-b4b8-b61ad332390f';
+const ACCOUNT_ID = 'a1b2c3d4-0000-0000-0000-000000000000';
 
-async function mockLogin(page: Page) {
-  await page.route('**/api/v1/auth/login', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(LOGIN_RESPONSE),
-    });
-  });
+function loginResponse(roles: string[]) {
+  return {
+    accessToken: makeToken({
+      subject_type: 'HUMAN',
+      takibo_scope_level: 'ORGANIZATION',
+      auth_method: 'PASSWORD',
+      org_id: ORG_ID,
+      account_id: ACCOUNT_ID,
+      roles,
+      groups: [],
+      permissions: [],
+    }),
+    tokenType: 'Bearer',
+    expiresIn: 3600,
+    scopeLevel: 'ORGANIZATION',
+    organizationId: ORG_ID,
+    accountId: ACCOUNT_ID,
+  };
 }
 
-async function login(page: Page) {
-  await mockLogin(page);
+const ME_SPACES = {
+  organizationId: ORG_ID,
+  items: [
+    {
+      spaceId: 's1',
+      code: 'finance',
+      name: 'Finance',
+      userId: 'u1',
+      spaceStatus: 'ACTIVE',
+      userStatus: 'ACTIVE',
+      selectable: true,
+    },
+    {
+      spaceId: 's2',
+      code: 'support',
+      name: 'Support',
+      userId: 'u1',
+      spaceStatus: 'SUSPENDED',
+      userStatus: 'ACTIVE',
+      selectable: false,
+    },
+  ],
+};
+
+const ORG_SPACES = {
+  content: [
+    {
+      id: 'sp1',
+      orgId: ORG_ID,
+      code: 'finance',
+      name: 'Finance',
+      status: 'ACTIVE',
+      ownerAccountId: 'aaaaaaaa-1111-2222-3333-444444444444',
+      createdAt: '2026-01-15T10:00:00Z',
+      updatedAt: '2026-02-20T10:00:00Z',
+    },
+  ],
+  page: 0,
+  size: 20,
+  totalElements: 1,
+  totalPages: 1,
+};
+
+async function mockApi(page: Page, roles: string[]) {
+  await page.route('**/api/v1/auth/login', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(loginResponse(roles)),
+    }),
+  );
+  await page.route('**/api/v1/me/spaces', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(ME_SPACES),
+    }),
+  );
+  await page.route('**/api/v1/orgs/*/spaces*', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(ORG_SPACES),
+    }),
+  );
+}
+
+async function login(page: Page, roles: string[] = ['R_ORG_ADMIN']) {
+  await mockApi(page, roles);
   await page.goto('/login');
   await page.getByLabel('Organisation', { exact: true }).fill('acme');
   await page.getByLabel('Adresse courriel', { exact: true }).fill('john.doe@acme.com');
@@ -122,5 +184,27 @@ test.describe('Session organisationnelle (UI 02)', () => {
 
     await expect(page.getByRole('link', { name: 'Gestion des Spaces', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Réduire le menu' })).toHaveCount(0);
+  });
+});
+
+test.describe('Spaces réels (UI 03)', () => {
+  test('Org Admin voit l’inventaire réel dans Gestion des Spaces', async ({ page }) => {
+    await login(page, ['R_ORG_ADMIN']);
+
+    await page.getByRole('link', { name: 'Gestion des Spaces', exact: true }).click();
+    await expect(page).toHaveURL(/\/app\/spaces$/);
+    await expect(page.getByRole('heading', { name: 'Gestion des Spaces' })).toBeVisible();
+    await expect(page.getByText('Finance', { exact: true })).toBeVisible();
+    await expect(page.getByText(/1 Space ·/)).toBeVisible();
+  });
+
+  test('un membre ne voit pas le menu Gestion des Spaces', async ({ page }) => {
+    await login(page, []);
+
+    // Mes Spaces reste visible (appartenance) ; l'inventaire admin est masqué.
+    await expect(page.getByRole('link', { name: 'Mes Spaces', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Gestion des Spaces', exact: true })).toHaveCount(
+      0,
+    );
   });
 });

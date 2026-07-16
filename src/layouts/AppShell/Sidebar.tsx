@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 
 import { Logo } from '@/design-system/components/Logo';
 import { organizationNav } from '@/layouts/AppShell/menu';
+import { isOrgAdmin } from '@/shared/identity/roles';
 import { useIdentity } from '@/shared/identity/useIdentity';
 import { cn } from '@/shared/utilities/cn';
 
@@ -13,7 +14,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggleCollapsed, onNavigate }: SidebarProps) {
-  const { email, orgCode, organizationId, avatarInitial, roleLabel } = useIdentity();
+  const { email, orgCode, organizationId, avatarInitial, roleLabel, roles } = useIdentity();
+  const visibleNav = organizationNav.filter((item) => !item.orgAdminOnly || isOrgAdmin(roles));
 
   return (
     <div className="flex h-full flex-col gap-5 bg-surface p-3">
@@ -62,7 +64,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate }: SidebarPro
         >
           Organisation
         </span>
-        {organizationNav.map(({ label, to, icon: Icon }) => (
+        {visibleNav.map(({ label, to, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
