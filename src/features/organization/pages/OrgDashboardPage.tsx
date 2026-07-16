@@ -33,7 +33,7 @@ import {
   demoSpaceStatusDistribution,
 } from '@/shared/demo/demo';
 import type { ActivitySeverity, DemoKpi, NotificationSeverity } from '@/shared/demo/demo';
-import { useOrganizationSpaces } from '@/features/spaces/hooks/use-organization-spaces';
+import { useOrgDashboardSummary } from '@/features/dashboard/hooks/use-org-dashboard-summary';
 import { isOrgAdmin } from '@/shared/identity/roles';
 import { useIdentity } from '@/shared/identity/useIdentity';
 import { cn } from '@/shared/utilities/cn';
@@ -110,6 +110,39 @@ function KpiTile({ kpi }: { kpi: DemoKpi }) {
   );
 }
 
+/**
+ * Cartouche d'un compteur RÉEL de TAKIBO (aucun badge « Démonstration », aucune
+ * tendance inventée). Un tiret honnête quand la valeur n'est pas disponible.
+ */
+function RealKpiTile({
+  icon: Icon,
+  label,
+  hint,
+  value,
+  loading,
+}: {
+  icon: IconType;
+  label: string;
+  hint: string;
+  value: number | undefined;
+  loading: boolean;
+}) {
+  return (
+    <Card className="flex items-start gap-4 p-5">
+      <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
+        <Icon className="size-6" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm text-text-muted">{label}</p>
+        <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-text">
+          {loading ? '…' : (value ?? '—')}
+        </p>
+        <p className="mt-0.5 text-xs text-text-muted">{hint}</p>
+      </div>
+    </Card>
+  );
+}
+
 function QuickAction({
   icon: Icon,
   label,
@@ -145,9 +178,9 @@ function QuickAction({
 export function OrgDashboardPage() {
   const { email, orgCode, roleLabel, roles } = useIdentity();
   const admin = isOrgAdmin(roles);
-  // Le seul compteur réel disponible en portée ORGANIZATION : le total des Spaces
-  // de l'inventaire administratif (autorité ORG requise). Les autres restent démo.
-  const orgSpaces = useOrganizationSpaces({ page: 0, size: 1 }, { enabled: admin });
+  // Compteurs RÉELS de l'organisation (autorité ORG requise) : un seul appel
+  // rend users, users actifs et spaces. Les autres cartes restent démo.
+  const summary = useOrgDashboardSummary({ enabled: admin });
   const navigate = useNavigate();
 
   return (
@@ -170,31 +203,41 @@ export function OrgDashboardPage() {
         </button>
       </header>
 
-      {/* Indicateur RÉEL (autorité ORG) : total des Spaces de l'organisation. */}
+      {/* Indicateurs RÉELS (autorité ORG) : comptes DISTINCTS de l'organisation
+          et total des Spaces, issus de /dashboard/summary. */}
       {admin && (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
-            Indicateur réel
+            Indicateurs réels
           </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Card className="flex items-start gap-4 p-5">
-              <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
-                <Layers className="size-6" aria-hidden="true" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm text-text-muted">Spaces</p>
-                <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-text">
-                  {orgSpaces.isPending ? '…' : (orgSpaces.data?.totalElements ?? '—')}
-                </p>
-                <p className="mt-0.5 text-xs text-text-muted">dans l’organisation</p>
-              </div>
-            </Card>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <RealKpiTile
+              icon={Users}
+              label="Utilisateurs"
+              hint="comptes distincts de l’organisation"
+              value={summary.data?.usersTotal}
+              loading={summary.isPending}
+            />
+            <RealKpiTile
+              icon={UsersRound}
+              label="Utilisateurs actifs"
+              hint="au moins un profil actif"
+              value={summary.data?.activeUsersTotal}
+              loading={summary.isPending}
+            />
+            <RealKpiTile
+              icon={Layers}
+              label="Spaces"
+              hint="dans l’organisation"
+              value={summary.data?.spacesTotal}
+              loading={summary.isPending}
+            />
           </div>
         </section>
       )}
 
-      {/* KPI encore simulés : situés par Space (users, rôles, groupes) ou en
-          attente d'un read-side organisationnel (clients OAuth2). */}
+      {/* KPI encore simulés : situés par Space (rôles, groupes) ou en attente
+          d'un read-side organisationnel (clients OAuth2). */}
       <section className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
@@ -202,9 +245,9 @@ export function OrgDashboardPage() {
           </h2>
           <DemoTag />
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {demoKpis
-            .filter((kpi) => kpi.key !== 'spaces')
+            .filter((kpi) => kpi.key !== 'spaces' && kpi.key !== 'users')
             .map((kpi) => (
               <KpiTile key={kpi.key} kpi={kpi} />
             ))}

@@ -1,11 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  fetchMySpaces,
-  fetchOrganizationSpaces,
-  SpacesApiError,
-  SpacesForbiddenError,
-} from '@/features/spaces/api/spaces-api';
+import { fetchMySpaces, fetchOrganizationSpaces } from '@/features/spaces/api/spaces-api';
+import { ApiError, ApiForbiddenError } from '@/shared/api/http';
 
 const fetchMock = vi.fn();
 
@@ -50,14 +46,14 @@ describe('fetchMySpaces', () => {
     expect((call[1] as RequestInit).headers).toMatchObject({ Authorization: 'Bearer tok' });
   });
 
-  it('mappe un 403 en SpacesForbiddenError', async () => {
+  it('mappe un 403 en ApiForbiddenError', async () => {
     fetchMock.mockResolvedValue(jsonResponse({}, 403));
-    await expect(fetchMySpaces('tok')).rejects.toBeInstanceOf(SpacesForbiddenError);
+    await expect(fetchMySpaces('tok')).rejects.toBeInstanceOf(ApiForbiddenError);
   });
 
-  it('mappe une erreur réseau en SpacesApiError', async () => {
+  it('mappe une erreur réseau en ApiError', async () => {
     fetchMock.mockRejectedValue(new Error('down'));
-    await expect(fetchMySpaces('tok')).rejects.toBeInstanceOf(SpacesApiError);
+    await expect(fetchMySpaces('tok')).rejects.toBeInstanceOf(ApiError);
   });
 });
 
@@ -94,15 +90,15 @@ describe('fetchOrganizationSpaces', () => {
     expect(url).not.toContain('search=');
   });
 
-  it('mappe un 403 en SpacesForbiddenError (surface masquée)', async () => {
+  it('mappe un 403 en ApiForbiddenError (surface masquée)', async () => {
     fetchMock.mockResolvedValue(jsonResponse({}, 403));
     await expect(fetchOrganizationSpaces('tok', 'org-uuid')).rejects.toBeInstanceOf(
-      SpacesForbiddenError,
+      ApiForbiddenError,
     );
   });
 
-  it('mappe un 500 en SpacesApiError', async () => {
+  it('mappe un 500 en ApiError', async () => {
     fetchMock.mockResolvedValue(jsonResponse({}, 500));
-    await expect(fetchOrganizationSpaces('tok', 'org-uuid')).rejects.toBeInstanceOf(SpacesApiError);
+    await expect(fetchOrganizationSpaces('tok', 'org-uuid')).rejects.toBeInstanceOf(ApiError);
   });
 });

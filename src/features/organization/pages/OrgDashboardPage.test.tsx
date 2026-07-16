@@ -1,0 +1,102 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { OrganizationSession } from '@/features/authentication/model/login';
+import { OrgDashboardPage } from '@/features/organization/pages/OrgDashboardPage';
+import { SessionContext } from '@/shared/security/session-context';
+
+const fetchMock = vi.fn();
+
+function jsonResponse(body: unknown, status = 200) {
+  return { ok: status >= 200 && status < 300, status, json: async () => body };
+}
+
+// Valeurs volontairement distinctives : impossibles à confondre avec les
+// données de démonstration encore présentes sur la page.
+const SUMMARY = {
+  organizationId: 'org-uuid',
+  usersTotal: 4242,
+  activeUsersTotal: 3737,
+  spacesTotal: 99,
+  generatedAt: '2026-07-16T10:00:00Z',
+};
+
+function makeSession(roles: string[]): OrganizationSession {
+  return {
+    accessToken: 'tok',
+    tokenType: 'Bearer',
+    expiresIn: 3600,
+    expiresAt: Date.now() + 3_600_000,
+    scopeLevel: 'ORGANIZATION',
+    orgCode: 'acme',
+    organizationId: 'org-uuid',
+    accountId: 'acc-uuid',
+    email: 'founder@takibo.io',
+    subjectType: 'HUMAN',
+    authMethod: 'PASSWORD',
+    roles,
+    groups: [],
+    permissions: [],
+  };
+}
+
+function renderAs(roles: string[]) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={queryClient}>
+      <SessionContext.Provider
+        value={{ session: makeSession(roles), openSession: () => {}, closeSession: () => {} }}
+      >
+        <MemoryRouter>
+          <OrgDashboardPage />
+        </MemoryRouter>
+      </SessionContext.Provider>
+    </QueryClientProvider>,
+  );
+}
+
+beforeEach(() => {
+  fetchMock.mockReset();
+  vi.stubGlobal('fetch', fetchMock);
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('OrgDashboardPage — compteurs réels (UI 04)', () => {
+  it('affiche les compteurs réels de l’organisation pour un Org Admin', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(SUMMARY));
+
+    renderAs(['R_ORG_ADMIN']);
+
+    expect(await screen.findByText('4242')).toBeInTheDocument();
+    expect(screen.getByText('3737')).toBeInTheDocument();
+    expect(screen.getByText('99')).toBeInTheDocument();
+    expect(screen.getByText('Indicateurs réels')).toBeInTheDocument();
+    expect(screen.getByText('comptes distincts de l’organisation')).toBeInTheDocument();
+
+    const url = fetchMock.mock.calls[0]![0] as string;
+    expect(url).toBe('/api/v1/orgs/org-uuid/dashboard/summary');
+  });
+
+  it('retire « Utilisateurs » et « Spaces » de la rangée de démonstration', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(SUMMARY));
+
+    renderAs(['R_ORG_OWNER']);
+
+    await screen.findByText('4242');
+    // La rangée démo ne garde que Rôles, Groupes et Clients OAuth2 : les cartes
+    // Utilisateurs et Spaces sont désormais réelles (5 tuiles démo → 3).
+    expect(screen.getAllByText('vs période précédente')).toHaveLength(3);
+  });
+
+  it('masque les compteurs réels pour un membre, sans appel réseau', () => {
+    renderAs([]);
+
+    expect(screen.queryByText('Indicateurs réels')).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});

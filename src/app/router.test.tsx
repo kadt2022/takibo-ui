@@ -75,14 +75,24 @@ const ORG_SPACES_RESPONSE = {
   totalPages: 3,
 };
 
-/** Dispatch par URL : login, /me/spaces, inventaire org. */
+const DASHBOARD_SUMMARY_RESPONSE = {
+  organizationId: 'org-uuid',
+  usersTotal: 2,
+  activeUsersTotal: 2,
+  spacesTotal: 3,
+  generatedAt: '2026-07-16T10:00:00Z',
+};
+
+/** Dispatch par URL : login, /me/spaces, résumé dashboard, inventaire org. */
 function routedFetch(url: string) {
   const body =
     url === '/api/v1/me/spaces'
       ? ME_SPACES_RESPONSE
-      : url.startsWith('/api/v1/orgs/')
-        ? ORG_SPACES_RESPONSE
-        : OK_RESPONSE;
+      : url.includes('/dashboard/summary')
+        ? DASHBOARD_SUMMARY_RESPONSE
+        : url.startsWith('/api/v1/orgs/')
+          ? ORG_SPACES_RESPONSE
+          : OK_RESPONSE;
   return Promise.resolve({ ok: true, status: 200, json: async () => body });
 }
 
