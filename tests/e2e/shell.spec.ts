@@ -220,7 +220,8 @@ test.describe('Spaces réels (UI 03)', () => {
 
     await expect(page.getByText('Indicateurs réels')).toBeVisible();
     await expect(page.getByText('comptes distincts de l’organisation')).toBeVisible();
-    await expect(page.getByText('au moins un profil actif')).toBeVisible();
+    // activeUsersTotal reste dans le contrat API mais n'est plus affiché.
+    await expect(page.getByText('au moins un profil actif')).toHaveCount(0);
     // La rangée de démonstration ne porte plus qu'un rôle/groupe/client :
     // Utilisateurs et Spaces viennent maintenant de /dashboard/summary.
     await expect(page.getByText('vs période précédente')).toHaveCount(3);

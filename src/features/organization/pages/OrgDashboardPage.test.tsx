@@ -89,7 +89,9 @@ describe('OrgDashboardPage — compteurs réels (UI 04)', () => {
     renderAs(['R_ORG_ADMIN']);
 
     expect(await screen.findByText('4242')).toBeInTheDocument();
-    expect(screen.getByText('3737')).toBeInTheDocument();
+    // activeUsersTotal (3737) reste dans le contrat mais n'est PLUS affiché :
+    // les statuts appartiennent aux écrans de détail, pas au dashboard.
+    expect(screen.queryByText('3737')).not.toBeInTheDocument();
     // Spaces vient de l'inventaire administratif, pas du résumé.
     expect(await screen.findByText('88')).toBeInTheDocument();
     expect(screen.getByText('Indicateurs réels')).toBeInTheDocument();

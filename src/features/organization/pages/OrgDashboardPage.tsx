@@ -114,6 +114,8 @@ function KpiTile({ kpi }: { kpi: DemoKpi }) {
 /**
  * Cartouche d'un compteur RÉEL de TAKIBO (aucun badge « Démonstration », aucune
  * tendance inventée). Un tiret honnête quand la valeur n'est pas disponible.
+ * Le tableau de bord résume, le clic explique : chaque carte ouvre l'écran
+ * de détail correspondant.
  */
 function RealKpiTile({
   icon: Icon,
@@ -121,26 +123,33 @@ function RealKpiTile({
   hint,
   value,
   loading,
+  to,
 }: {
   icon: IconType;
   label: string;
   hint: string;
   value: number | undefined;
   loading: boolean;
+  to: string;
 }) {
   return (
-    <Card className="flex items-start gap-4 p-5">
-      <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
-        <Icon className="size-6" aria-hidden="true" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-sm text-text-muted">{label}</p>
-        <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-text">
-          {loading ? '…' : (value ?? '—')}
-        </p>
-        <p className="mt-0.5 text-xs text-text-muted">{hint}</p>
-      </div>
-    </Card>
+    <Link
+      to={to}
+      className="block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+    >
+      <Card className="flex items-start gap-4 p-5 transition-colors duration-150 hover:border-primary/50 hover:bg-primary/5">
+        <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
+          <Icon className="size-6" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm text-text-muted">{label}</p>
+          <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-text">
+            {loading ? '…' : (value ?? '—')}
+          </p>
+          <p className="mt-0.5 text-xs text-text-muted">{hint}</p>
+        </div>
+      </Card>
+    </Link>
   );
 }
 
@@ -181,7 +190,7 @@ export function OrgDashboardPage() {
   const admin = isOrgAdmin(roles);
   // Chaque compteur réel a SA source, pour que les cartes se dégradent
   // indépendamment : si une surface backend est absente, elle seule affiche « — ».
-  //  - users / users actifs : read-side dashboard (Dashboard 01) ;
+  //  - users : read-side dashboard (Dashboard 01) ;
   //  - spaces : inventaire administratif, déjà en place depuis UI 03.
   const summary = useOrgDashboardSummary({ enabled: admin });
   const orgSpaces = useOrganizationSpaces({ page: 0, size: 1 }, { enabled: admin });
@@ -214,20 +223,16 @@ export function OrgDashboardPage() {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
             Indicateurs réels
           </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {/* Le dashboard résume (2 agrégats), le clic explique : les statuts
+              par profil appartiennent aux écrans de détail. */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <RealKpiTile
               icon={Users}
               label="Utilisateurs"
               hint="comptes distincts de l’organisation"
               value={summary.data?.usersTotal}
               loading={summary.isPending}
-            />
-            <RealKpiTile
-              icon={UsersRound}
-              label="Utilisateurs actifs"
-              hint="au moins un profil actif"
-              value={summary.data?.activeUsersTotal}
-              loading={summary.isPending}
+              to="/app/organization/users"
             />
             <RealKpiTile
               icon={Layers}
@@ -235,6 +240,7 @@ export function OrgDashboardPage() {
               hint="dans l’organisation"
               value={orgSpaces.data?.totalElements}
               loading={orgSpaces.isPending}
+              to="/app/spaces"
             />
           </div>
         </section>
