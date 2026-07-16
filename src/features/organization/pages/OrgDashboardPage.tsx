@@ -34,6 +34,7 @@ import {
 } from '@/shared/demo/demo';
 import type { ActivitySeverity, DemoKpi, NotificationSeverity } from '@/shared/demo/demo';
 import { useOrgDashboardSummary } from '@/features/dashboard/hooks/use-org-dashboard-summary';
+import { useOrganizationSpaces } from '@/features/spaces/hooks/use-organization-spaces';
 import { isOrgAdmin } from '@/shared/identity/roles';
 import { useIdentity } from '@/shared/identity/useIdentity';
 import { cn } from '@/shared/utilities/cn';
@@ -178,9 +179,12 @@ function QuickAction({
 export function OrgDashboardPage() {
   const { email, orgCode, roleLabel, roles } = useIdentity();
   const admin = isOrgAdmin(roles);
-  // Compteurs RÉELS de l'organisation (autorité ORG requise) : un seul appel
-  // rend users, users actifs et spaces. Les autres cartes restent démo.
+  // Chaque compteur réel a SA source, pour que les cartes se dégradent
+  // indépendamment : si une surface backend est absente, elle seule affiche « — ».
+  //  - users / users actifs : read-side dashboard (Dashboard 01) ;
+  //  - spaces : inventaire administratif, déjà en place depuis UI 03.
   const summary = useOrgDashboardSummary({ enabled: admin });
+  const orgSpaces = useOrganizationSpaces({ page: 0, size: 1 }, { enabled: admin });
   const navigate = useNavigate();
 
   return (
@@ -229,8 +233,8 @@ export function OrgDashboardPage() {
               icon={Layers}
               label="Spaces"
               hint="dans l’organisation"
-              value={summary.data?.spacesTotal}
-              loading={summary.isPending}
+              value={orgSpaces.data?.totalElements}
+              loading={orgSpaces.isPending}
             />
           </div>
         </section>

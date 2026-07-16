@@ -23,6 +23,22 @@ const SUMMARY = {
   generatedAt: '2026-07-16T10:00:00Z',
 };
 
+const ORG_SPACES_PAGE = {
+  content: [],
+  page: 0,
+  size: 1,
+  totalElements: 88,
+  totalPages: 88,
+};
+
+/** Chaque carte a sa source : le résumé (users) et l'inventaire (spaces). */
+function routedFetch(url: string, summaryStatus = 200) {
+  if (url.includes('/dashboard/summary')) {
+    return Promise.resolve(jsonResponse(summaryStatus === 200 ? SUMMARY : {}, summaryStatus));
+  }
+  return Promise.resolve(jsonResponse(ORG_SPACES_PAGE));
+}
+
 function makeSession(roles: string[]): OrganizationSession {
   return {
     accessToken: 'tok',
@@ -68,22 +84,35 @@ afterEach(() => {
 
 describe('OrgDashboardPage — compteurs réels (UI 04)', () => {
   it('affiche les compteurs réels de l’organisation pour un Org Admin', async () => {
-    fetchMock.mockResolvedValue(jsonResponse(SUMMARY));
+    fetchMock.mockImplementation((url: string) => routedFetch(url));
 
     renderAs(['R_ORG_ADMIN']);
 
     expect(await screen.findByText('4242')).toBeInTheDocument();
     expect(screen.getByText('3737')).toBeInTheDocument();
-    expect(screen.getByText('99')).toBeInTheDocument();
+    // Spaces vient de l'inventaire administratif, pas du résumé.
+    expect(await screen.findByText('88')).toBeInTheDocument();
     expect(screen.getByText('Indicateurs réels')).toBeInTheDocument();
     expect(screen.getByText('comptes distincts de l’organisation')).toBeInTheDocument();
 
-    const url = fetchMock.mock.calls[0]![0] as string;
-    expect(url).toBe('/api/v1/orgs/org-uuid/dashboard/summary');
+    const urls = fetchMock.mock.calls.map((call) => call[0] as string);
+    expect(urls).toContain('/api/v1/orgs/org-uuid/dashboard/summary');
+    expect(urls.some((url) => url.includes('/api/v1/orgs/org-uuid/spaces?'))).toBe(true);
+  });
+
+  it('garde le compteur de Spaces même si le résumé est indisponible', async () => {
+    // Non-régression : tant que le read-side dashboard n'est pas déployé, la
+    // carte Spaces (surface déjà en place) doit continuer d'afficher son total.
+    fetchMock.mockImplementation((url: string) => routedFetch(url, 404));
+
+    renderAs(['R_ORG_ADMIN']);
+
+    expect(await screen.findByText('88')).toBeInTheDocument();
+    expect(screen.getByText('dans l’organisation')).toBeInTheDocument();
   });
 
   it('retire « Utilisateurs » et « Spaces » de la rangée de démonstration', async () => {
-    fetchMock.mockResolvedValue(jsonResponse(SUMMARY));
+    fetchMock.mockImplementation((url: string) => routedFetch(url));
 
     renderAs(['R_ORG_OWNER']);
 
