@@ -131,9 +131,7 @@ describe('OrgDashboardPage — compteurs réels (UI 04)', () => {
 
     renderAs(['R_ORG_ADMIN']);
 
-    await waitFor(() =>
-      expect(screen.queryByText('Indicateurs réels')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.queryByText('Indicateurs réels')).not.toBeInTheDocument());
     expect(screen.queryByText('comptes distincts de l’organisation')).not.toBeInTheDocument();
   });
 
