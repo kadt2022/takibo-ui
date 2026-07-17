@@ -78,12 +78,27 @@ const ORG_SPACES = {
   totalPages: 1,
 };
 
+const DASHBOARD_SUMMARY = {
+  organizationId: ORG_ID,
+  usersTotal: 2,
+  activeUsersTotal: 2,
+  spacesTotal: 1,
+  generatedAt: '2026-07-16T10:00:00Z',
+};
+
 async function mockApi(page: Page, roles: string[]) {
   await page.route('**/api/v1/auth/login', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(loginResponse(roles)),
+    }),
+  );
+  await page.route('**/api/v1/orgs/*/dashboard/summary', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(DASHBOARD_SUMMARY),
     }),
   );
   await page.route('**/api/v1/me/spaces', (route) =>
@@ -196,6 +211,20 @@ test.describe('Spaces réels (UI 03)', () => {
     await expect(page.getByRole('heading', { name: 'Gestion des Spaces' })).toBeVisible();
     await expect(page.getByText('Finance', { exact: true })).toBeVisible();
     await expect(page.getByText(/1 Space ·/)).toBeVisible();
+  });
+
+  test('l’Org Admin voit les compteurs réels d’utilisateurs sur le tableau de bord', async ({
+    page,
+  }) => {
+    await login(page, ['R_ORG_ADMIN']);
+
+    await expect(page.getByText('Indicateurs réels')).toBeVisible();
+    await expect(page.getByText('comptes distincts de l’organisation')).toBeVisible();
+    // activeUsersTotal reste dans le contrat API mais n'est plus affiché.
+    await expect(page.getByText('au moins un profil actif')).toHaveCount(0);
+    // La rangée de démonstration ne porte plus qu'un rôle/groupe/client :
+    // Utilisateurs et Spaces viennent maintenant de /dashboard/summary.
+    await expect(page.getByText('vs période précédente')).toHaveCount(3);
   });
 
   test('un membre ne voit pas le menu Gestion des Spaces', async ({ page }) => {

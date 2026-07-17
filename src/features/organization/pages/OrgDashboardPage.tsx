@@ -19,6 +19,7 @@ import type { ComponentType, ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { Card } from '@/design-system/components/Card';
+import { ApiForbiddenError } from '@/shared/api/http';
 import { DemoTag } from '@/design-system/components/DemoTag';
 import { ActivityChart } from '@/features/organization/components/ActivityChart';
 import { DonutChart } from '@/features/organization/components/DonutChart';
@@ -33,6 +34,7 @@ import {
   demoSpaceStatusDistribution,
 } from '@/shared/demo/demo';
 import type { ActivitySeverity, DemoKpi, NotificationSeverity } from '@/shared/demo/demo';
+import { useOrgDashboardSummary } from '@/features/dashboard/hooks/use-org-dashboard-summary';
 import { useOrganizationSpaces } from '@/features/spaces/hooks/use-organization-spaces';
 import { isOrgAdmin } from '@/shared/identity/roles';
 import { useIdentity } from '@/shared/identity/useIdentity';
@@ -110,6 +112,48 @@ function KpiTile({ kpi }: { kpi: DemoKpi }) {
   );
 }
 
+/**
+ * Cartouche d'un compteur RÉEL de TAKIBO (aucun badge « Démonstration », aucune
+ * tendance inventée). Un tiret honnête quand la valeur n'est pas disponible.
+ * Le tableau de bord résume, le clic explique : chaque carte ouvre l'écran
+ * de détail correspondant.
+ */
+function RealKpiTile({
+  icon: Icon,
+  label,
+  hint,
+  value,
+  loading,
+  to,
+}: {
+  icon: IconType;
+  label: string;
+  hint: string;
+  value: number | undefined;
+  loading: boolean;
+  to: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+    >
+      <Card className="flex items-start gap-4 p-5 transition-colors duration-150 hover:border-primary/50 hover:bg-primary/5">
+        <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
+          <Icon className="size-6" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm text-text-muted">{label}</p>
+          <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-text">
+            {loading ? '…' : (value ?? '—')}
+          </p>
+          <p className="mt-0.5 text-xs text-text-muted">{hint}</p>
+        </div>
+      </Card>
+    </Link>
+  );
+}
+
 function QuickAction({
   icon: Icon,
   label,
@@ -145,10 +189,16 @@ function QuickAction({
 export function OrgDashboardPage() {
   const { email, orgCode, roleLabel, roles } = useIdentity();
   const admin = isOrgAdmin(roles);
-  // Le seul compteur réel disponible en portée ORGANIZATION : le total des Spaces
-  // de l'inventaire administratif (autorité ORG requise). Les autres restent démo.
+  // Chaque compteur réel a SA source, pour que les cartes se dégradent
+  // indépendamment : si une surface backend est absente, elle seule affiche « — ».
+  //  - users : read-side dashboard (Dashboard 01) ;
+  //  - spaces : inventaire administratif, déjà en place depuis UI 03.
+  const summary = useOrgDashboardSummary({ enabled: admin });
   const orgSpaces = useOrganizationSpaces({ page: 0, size: 1 }, { enabled: admin });
   const navigate = useNavigate();
+  // Si le backend refuse le résumé (403) malgré un rôle R_ORG_* décodé, la
+  // frontière fait autorité : la surface se masque, elle n'affiche pas des « — ».
+  const summaryForbidden = summary.isError && summary.error instanceof ApiForbiddenError;
 
   return (
     <div className="flex flex-col gap-6">
@@ -170,31 +220,38 @@ export function OrgDashboardPage() {
         </button>
       </header>
 
-      {/* Indicateur RÉEL (autorité ORG) : total des Spaces de l'organisation. */}
-      {admin && (
+      {/* Indicateurs RÉELS (autorité ORG) : comptes DISTINCTS de l'organisation
+          et total des Spaces, issus de /dashboard/summary. */}
+      {admin && !summaryForbidden && (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
-            Indicateur réel
+            Indicateurs réels
           </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Card className="flex items-start gap-4 p-5">
-              <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
-                <Layers className="size-6" aria-hidden="true" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm text-text-muted">Spaces</p>
-                <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-text">
-                  {orgSpaces.isPending ? '…' : (orgSpaces.data?.totalElements ?? '—')}
-                </p>
-                <p className="mt-0.5 text-xs text-text-muted">dans l’organisation</p>
-              </div>
-            </Card>
+          {/* Le dashboard résume (2 agrégats), le clic explique : les statuts
+              par profil appartiennent aux écrans de détail. */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <RealKpiTile
+              icon={Users}
+              label="Utilisateurs"
+              hint="comptes distincts de l’organisation"
+              value={summary.data?.usersTotal}
+              loading={summary.isPending}
+              to="/app/organization/users"
+            />
+            <RealKpiTile
+              icon={Layers}
+              label="Spaces"
+              hint="dans l’organisation"
+              value={orgSpaces.data?.totalElements}
+              loading={orgSpaces.isPending}
+              to="/app/spaces"
+            />
           </div>
         </section>
       )}
 
-      {/* KPI encore simulés : situés par Space (users, rôles, groupes) ou en
-          attente d'un read-side organisationnel (clients OAuth2). */}
+      {/* KPI encore simulés : situés par Space (rôles, groupes) ou en attente
+          d'un read-side organisationnel (clients OAuth2). */}
       <section className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
@@ -202,9 +259,9 @@ export function OrgDashboardPage() {
           </h2>
           <DemoTag />
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {demoKpis
-            .filter((kpi) => kpi.key !== 'spaces')
+            .filter((kpi) => kpi.key !== 'spaces' && kpi.key !== 'users')
             .map((kpi) => (
               <KpiTile key={kpi.key} kpi={kpi} />
             ))}

@@ -9,9 +9,9 @@ import { ErrorState } from '@/design-system/components/ErrorState';
 import { Forbidden } from '@/design-system/components/Forbidden';
 import { Loading } from '@/design-system/components/Loading';
 import { SpaceStatusPill } from '@/features/organization/components/SpaceStatusPill';
-import { SpacesForbiddenError } from '@/features/spaces/api/spaces-api';
 import { useOrganizationSpaces } from '@/features/spaces/hooks/use-organization-spaces';
 import type { SpaceStatus } from '@/features/spaces/model/space';
+import { ApiForbiddenError } from '@/shared/api/http';
 import { useIdentity } from '@/shared/identity/useIdentity';
 import { isOrgAdmin } from '@/shared/identity/roles';
 
@@ -135,7 +135,7 @@ export function SpacesManagementPage() {
       {isPending ? (
         <Loading label="Chargement des Spaces de l’organisation…" />
       ) : isError ? (
-        error instanceof SpacesForbiddenError ? (
+        error instanceof ApiForbiddenError ? (
           <Forbidden description="Votre contexte ne permet pas de lister les Spaces de cette organisation." />
         ) : (
           <ErrorState
