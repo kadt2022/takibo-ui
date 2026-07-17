@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -122,6 +122,19 @@ describe('OrgDashboardPage — compteurs réels (UI 04)', () => {
     // La rangée démo ne garde que Rôles, Groupes et Clients OAuth2 : les cartes
     // Utilisateurs et Spaces sont désormais réelles (5 tuiles démo → 3).
     expect(screen.getAllByText('vs période précédente')).toHaveLength(3);
+  });
+
+  it('masque toute la surface réelle quand la frontière refuse le résumé (403)', async () => {
+    // Un rôle R_ORG_* décodé ne suffit pas : si le backend refuse le résumé,
+    // la frontière fait autorité et la section disparaît (pas de tuiles « — »).
+    fetchMock.mockImplementation((url: string) => routedFetch(url, 403));
+
+    renderAs(['R_ORG_ADMIN']);
+
+    await waitFor(() =>
+      expect(screen.queryByText('Indicateurs réels')).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByText('comptes distincts de l’organisation')).not.toBeInTheDocument();
   });
 
   it('masque les compteurs réels pour un membre, sans appel réseau', () => {

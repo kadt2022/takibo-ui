@@ -19,6 +19,7 @@ import type { ComponentType, ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { Card } from '@/design-system/components/Card';
+import { ApiForbiddenError } from '@/shared/api/http';
 import { DemoTag } from '@/design-system/components/DemoTag';
 import { ActivityChart } from '@/features/organization/components/ActivityChart';
 import { DonutChart } from '@/features/organization/components/DonutChart';
@@ -195,6 +196,9 @@ export function OrgDashboardPage() {
   const summary = useOrgDashboardSummary({ enabled: admin });
   const orgSpaces = useOrganizationSpaces({ page: 0, size: 1 }, { enabled: admin });
   const navigate = useNavigate();
+  // Si le backend refuse le résumé (403) malgré un rôle R_ORG_* décodé, la
+  // frontière fait autorité : la surface se masque, elle n'affiche pas des « — ».
+  const summaryForbidden = summary.isError && summary.error instanceof ApiForbiddenError;
 
   return (
     <div className="flex flex-col gap-6">
@@ -218,7 +222,7 @@ export function OrgDashboardPage() {
 
       {/* Indicateurs RÉELS (autorité ORG) : comptes DISTINCTS de l'organisation
           et total des Spaces, issus de /dashboard/summary. */}
-      {admin && (
+      {admin && !summaryForbidden && (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
             Indicateurs réels
