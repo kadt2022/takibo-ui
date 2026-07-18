@@ -10,6 +10,7 @@ import type { SpaceSelectionState } from '@/features/context-selector/model/cont
 import type { AccessibleSpace } from '@/features/spaces/model/space';
 import { Spinner } from '@/design-system/components/Spinner';
 import { ApiForbiddenError } from '@/shared/api/http';
+import { cn } from '@/shared/utilities/cn';
 
 interface ContextSelectorMenuProps {
   orgCode: string;
@@ -51,7 +52,13 @@ export function ContextSelectorMenu({
       role="menu"
       aria-label="Changer de contexte"
       tabIndex={-1}
-      className="absolute left-0 top-full z-50 mt-2 w-[360px] max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-surface-elevated shadow-card"
+      className={cn(
+        'absolute z-50 w-[360px] max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-surface-elevated shadow-card',
+        // Mobile/tablette : sous la carte. Desktop : décalé à DROITE de la
+        // carte (flyout façon GitHub), par-dessus le contenu.
+        'left-0 top-full mt-2',
+        'lg:left-[calc(100%+0.5rem)] lg:top-0 lg:mt-0',
+      )}
     >
       {/* En-tête : titre + recherche visible immédiatement. */}
       <div className="border-b border-border px-3 pb-2.5 pt-2.5">
