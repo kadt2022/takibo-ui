@@ -154,7 +154,7 @@ describe('shell sous session ORGANIZATION', () => {
     expect(screen.getByRole('link', { name: 'Tableau de bord' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Mes Spaces' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Gestion des Spaces' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Utilisateurs' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Utilisateurs' })).not.toBeInTheDocument();
     // Récit UI 06A : Rôles et Groupes ne figurent PAS dans le menu Organisation —
     // ce sont des surfaces situées par Space, réservées au futur contexte SPACE.
     expect(screen.queryByRole('link', { name: 'Rôles' })).not.toBeInTheDocument();

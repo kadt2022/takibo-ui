@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, Layers, Settings, Users } from 'lucide-react';
+import { Building2, LayoutDashboard, Layers, Settings } from 'lucide-react';
 import type { ComponentType } from 'react';
 
 export interface NavItem {
@@ -10,16 +10,16 @@ export interface NavItem {
 }
 
 /**
- * Onglets du contexte ORGANISATION (récit UI 06A). « Utilisateurs » et
- * « Gestion des Spaces » n'apparaissent que pour l'autorité ORG : un membre ou
- * un R_SPACE_ADMIN seul ne voit pas ces surfaces administratives. « Rôles » et
+ * Onglets du contexte ORGANISATION (récit UI 06A). « Gestion des Spaces »
+ * n'apparaît que pour l'autorité ORG : un membre ou un R_SPACE_ADMIN seul ne
+ * voit pas cette surface administrative. « Utilisateurs » reste absent tant
+ * qu'aucune route dédiée n'existe. « Rôles » et
  * « Groupes » ne figurent PAS dans ce menu : ce sont des surfaces situées par
  * Space, elles appartiendront au futur menu du contexte SPACE (après l'échange
  * de token). Aucun menu PLATEFORME dans cette console.
  */
 export const organizationNav: NavItem[] = [
   { label: 'Tableau de bord', to: '/app/dashboard', icon: LayoutDashboard },
-  { label: 'Utilisateurs', to: '/app/organization/users', icon: Users, orgAdminOnly: true },
   { label: 'Mes Spaces', to: '/app/my-spaces', icon: Layers },
   { label: 'Gestion des Spaces', to: '/app/spaces', icon: Building2, orgAdminOnly: true },
   { label: 'Paramètres', to: '/app/settings', icon: Settings },

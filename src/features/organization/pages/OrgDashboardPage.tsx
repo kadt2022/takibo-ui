@@ -120,6 +120,22 @@ function RealKpiTile({
   );
 }
 
+/** Compteur d'attente explicite : valeur locale, aucun appel ni navigation. */
+function PlaceholderKpiTile({ icon: Icon, label }: { icon: IconType; label: string }) {
+  return (
+    <Card className="flex items-start gap-4 p-5">
+      <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
+        <Icon className="size-6" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm text-text-muted">{label}</p>
+        <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-text">0</p>
+        <p className="mt-0.5 text-xs text-text-muted">bientôt disponible</p>
+      </div>
+    </Card>
+  );
+}
+
 function QuickAction({
   icon: Icon,
   label,
@@ -171,16 +187,17 @@ export function OrgDashboardPage() {
       {/* Pas d'en-tête de bienvenue : l'identité et le contexte sont déjà
           portés par la TopBar et la Sidebar — le dashboard va droit aux
           indicateurs. */}
-      {/* Indicateurs RÉELS (autorité ORG) : comptes DISTINCTS de l'organisation,
-          total des Spaces et clients OAuth2, issus de /dashboard/summary. */}
+      {/* Indicateurs d'autorité ORG : trois compteurs réels et deux emplacements
+          statiques non branchés pour Rôles et Groupes. */}
       {admin && !summaryForbidden && (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
             Indicateurs réels
           </h2>
-          {/* Le dashboard résume (3 agrégats), le clic explique : les statuts
-              par profil appartiennent aux écrans de détail. */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {/* Les trois compteurs réels ouvrent leur détail. Rôles et Groupes
+              restent volontairement non cliquables tant que leurs sources
+              backend ne sont pas disponibles. */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <RealKpiTile
               icon={Users}
               label="Utilisateurs"
@@ -205,6 +222,8 @@ export function OrgDashboardPage() {
               loading={summary.isPending}
               to="/app/organization/clients"
             />
+            <PlaceholderKpiTile icon={ShieldCheck} label="Rôles" />
+            <PlaceholderKpiTile icon={Users} label="Groupes" />
           </div>
         </section>
       )}

@@ -71,12 +71,14 @@ function LocationProbe() {
   return <span data-testid="location">{location.pathname}</span>;
 }
 
-function renderSelector() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(
+function renderSelector(
+  session = SESSION,
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) {
+  return render(
     <QueryClientProvider client={queryClient}>
       <SessionContext.Provider
-        value={{ session: SESSION, openSession: () => {}, closeSession: closeSessionMock }}
+        value={{ session, openSession: () => {}, closeSession: closeSessionMock }}
       >
         <MemoryRouter initialEntries={['/app/my-spaces']}>
           <ContextSelector />
@@ -134,6 +136,49 @@ describe('ContextSelector — déclencheur (UI 06A)', () => {
     renderSelector();
 
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it('isole le cache des Spaces entre deux sessions successives', async () => {
+    const user = userEvent.setup();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const otherSession: OrganizationSession = {
+      ...SESSION,
+      accessToken: 'other-token-secret',
+      expiresAt: SESSION.expiresAt + 1,
+      orgCode: 'other-org',
+      organizationId: 'other-org-uuid',
+      accountId: 'other-account-uuid',
+    };
+    const otherSpaces = {
+      organizationId: 'other-org-uuid',
+      items: [
+        {
+          spaceId: 's-engineering',
+          code: 'engineering',
+          name: 'Engineering',
+          userId: 'u4',
+          spaceStatus: 'ACTIVE',
+          userStatus: 'ACTIVE',
+          selectable: true,
+        },
+      ],
+    };
+
+    fetchMock.mockResolvedValueOnce(jsonResponse(SPACES));
+    const firstRender = renderSelector(SESSION, queryClient);
+    await openMenu(user);
+    expect(await screen.findByText('Finance')).toBeInTheDocument();
+    firstRender.unmount();
+
+    fetchMock.mockResolvedValueOnce(jsonResponse(otherSpaces));
+    renderSelector(otherSession, queryClient);
+    await user.click(screen.getByRole('button', { name: /other-org/ }));
+
+    expect(await screen.findByText('Engineering')).toBeInTheDocument();
+    expect(screen.queryByText('Finance')).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect((fetchMock.mock.calls[1]![1] as RequestInit).headers).toMatchObject({
+      Authorization: 'Bearer other-token-secret',
+    });
   });
 });
 

@@ -222,10 +222,8 @@ test.describe('Spaces réels (UI 03)', () => {
     await expect(page.getByText('Clients OAuth2')).toHaveCount(1);
     // Plus aucune tuile KPI de démonstration sur le tableau de bord.
     await expect(page.getByText('vs période précédente')).toHaveCount(0);
-    // Récit UI 06A : Rôles et Groupes ne sont PAS des menus Organisation — ce
-    // sont des surfaces situées par Space (futur contexte SPACE). Utilisateurs
-    // rejoint le menu de l'autorité ORG.
-    await expect(page.getByRole('link', { name: 'Utilisateurs', exact: true })).toBeVisible();
+    // Aucun lien n'est exposé avant que sa route réelle existe.
+    await expect(page.getByRole('link', { name: 'Utilisateurs', exact: true })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Rôles', exact: true })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Groupes', exact: true })).toHaveCount(0);
   });

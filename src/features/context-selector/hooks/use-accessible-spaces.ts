@@ -22,7 +22,14 @@ export function useAccessibleSpaces(options: { enabled?: boolean } = {}) {
   const token = session?.accessToken;
 
   const query = useQuery({
-    queryKey: ['context-selector-spaces'],
+    // Isole les données entre deux connexions sans exposer le bearer token
+    // dans la clé de cache (visible dans les outils React Query).
+    queryKey: [
+      'context-selector-spaces',
+      session?.organizationId,
+      session?.accountId,
+      session?.expiresAt,
+    ],
     queryFn: () => fetchMySpaces(token as string),
     enabled: Boolean(token) && (options.enabled ?? true),
     retry: (failureCount, error) =>
