@@ -24,8 +24,7 @@ export function ContextSelector({ collapsed = false }: { collapsed?: boolean }) 
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  const { current, selectOrganization, selectSpace, spaceSelection, resetSpaceSelection } =
-    useContextSelection();
+  const { selectSpace, spaceSelection, resetSpaceSelection } = useContextSelection();
   // Chargé seulement quand le menu est ouvert : le sélecteur n'interroge pas
   // /me/spaces en arrière-plan à chaque rendu du shell.
   const spaces = useAccessibleSpaces({ enabled: open });
@@ -115,14 +114,8 @@ export function ContextSelector({ collapsed = false }: { collapsed?: boolean }) 
       />
       {open && (
         <ContextSelectorMenu
-          orgCode={orgCode}
-          organizationActive={current.type === 'ORGANIZATION'}
           spaces={spaces}
           spaceSelection={spaceSelection}
-          onSelectOrganization={() => {
-            selectOrganization();
-            close(true);
-          }}
           onSelectSpace={(spaceId) => void selectSpace(spaceId)}
           menuRef={menuRef}
         />

@@ -4,7 +4,6 @@ import type { RefObject } from 'react';
 import { Info, RotateCcw, ShieldAlert } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
 
-import { OrganizationContextOption } from '@/features/context-selector/components/OrganizationContextOption';
 import { SpaceContextOption } from '@/features/context-selector/components/SpaceContextOption';
 import type { SpaceSelectionState } from '@/features/context-selector/model/context';
 import type { AccessibleSpace } from '@/features/spaces/model/space';
@@ -13,28 +12,22 @@ import { ApiForbiddenError } from '@/shared/api/http';
 import { cn } from '@/shared/utilities/cn';
 
 interface ContextSelectorMenuProps {
-  orgCode: string;
-  organizationActive: boolean;
   spaces: UseQueryResult<AccessibleSpace[]>;
   spaceSelection: SpaceSelectionState;
-  onSelectOrganization: () => void;
   onSelectSpace: (spaceId: string) => void;
   menuRef: RefObject<HTMLDivElement | null>;
 }
 
 /**
  * Popover du sélecteur de contexte, façon sélecteur de repository GitHub :
- * flottant sous la carte, au-dessus du contenu, jamais contraint par la largeur
- * de la Sidebar (min 320 px). En tête : titre + recherche immédiatement
- * visible ; puis l'Organisation courante (cochée), une séparation, et les
- * Spaces de GET /api/v1/me/spaces filtrés par la recherche.
+ * flyout à droite de la carte sur desktop, au-dessus du contenu. En tête :
+ * titre + recherche immédiatement visible ; puis UNIQUEMENT les Spaces de
+ * GET /api/v1/me/spaces filtrés par la recherche — l'Organisation n'est pas
+ * répétée ici, la carte-déclencheur affiche déjà le contexte courant.
  */
 export function ContextSelectorMenu({
-  orgCode,
-  organizationActive,
   spaces,
   spaceSelection,
-  onSelectOrganization,
   onSelectSpace,
   menuRef,
 }: ContextSelectorMenuProps) {
@@ -73,17 +66,9 @@ export function ContextSelectorMenu({
         />
       </div>
 
-      {/* Contexte courant : l'Organisation, toujours proposée et cochée. */}
+      {/* Uniquement les Spaces accessibles — pas de répétition du contexte
+          Organisation courant, déjà porté par la carte-déclencheur. */}
       <div className="p-1.5">
-        <OrganizationContextOption
-          orgCode={orgCode}
-          active={organizationActive}
-          onSelect={onSelectOrganization}
-        />
-      </div>
-
-      {/* Séparation puis les Spaces accessibles. */}
-      <div className="border-t border-border p-1.5">
         <p className="px-2.5 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
           Mes Spaces
         </p>

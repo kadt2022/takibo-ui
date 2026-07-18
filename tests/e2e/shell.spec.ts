@@ -262,10 +262,9 @@ test.describe('Sélecteur de contexte (UI 06A)', () => {
     // Popover façon GitHub : titre + recherche visibles immédiatement.
     await expect(menu.getByText('Changer de contexte')).toBeVisible();
     await expect(menu.getByPlaceholder('Rechercher un Space...')).toBeVisible();
-    await expect(menu.getByRole('menuitem', { name: /Organisation/ })).toHaveAttribute(
-      'aria-current',
-      'true',
-    );
+    // Le menu n'énumère QUE les Spaces : le contexte Organisation courant est
+    // porté par la carte-déclencheur, il n'est pas répété dans la liste.
+    await expect(menu.getByRole('menuitem', { name: /Organisation/ })).toHaveCount(0);
     // Spaces réels de /me/spaces : Finance disponible, Support suspendu désactivé.
     await expect(menu.getByRole('menuitem', { name: /Finance/ })).toBeVisible();
     const support = menu.getByRole('menuitem', { name: /Support/ });
@@ -281,9 +280,9 @@ test.describe('Sélecteur de contexte (UI 06A)', () => {
     ).toBeVisible();
     await expect(page.getByText('Contexte actuel')).toBeVisible();
 
-    // Choisir Organisation ramène au tableau de bord et ferme le menu.
-    await menu.getByRole('menuitem', { name: /Organisation/ }).click();
-    await expect(page).toHaveURL(/\/app\/dashboard$/);
+    // Escape ferme le menu ; le contexte reste Organisation.
+    await page.keyboard.press('Escape');
     await expect(page.getByRole('menu', { name: 'Changer de contexte' })).toHaveCount(0);
+    await expect(page).toHaveURL(/\/app\/dashboard$/);
   });
 });

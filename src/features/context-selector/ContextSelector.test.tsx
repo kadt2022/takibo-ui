@@ -138,16 +138,19 @@ describe('ContextSelector — déclencheur (UI 06A)', () => {
 });
 
 describe('ContextSelector — options (UI 06A)', () => {
-  it('propose toujours l’Organisation, marquée contexte actif (aria-current)', async () => {
+  it('n’énumère QUE les Spaces — le contexte Organisation n’est pas répété dans le menu', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValue(jsonResponse(SPACES));
     renderSelector();
 
     await openMenu(user);
+    await screen.findByText('Finance');
 
-    const organizationOption = screen.getByRole('menuitem', { name: /Organisation/ });
-    expect(organizationOption).toHaveAttribute('aria-current', 'true');
-    expect(organizationOption).toHaveTextContent('takibo-finance');
+    // La carte-déclencheur porte déjà le contexte courant ; le menu liste
+    // uniquement les Spaces accessibles.
+    expect(screen.queryByRole('menuitem', { name: /Organisation/ })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('menuitem')).toHaveLength(3);
+    expect(trigger()).toHaveTextContent('Organisation');
   });
 
   it('charge les Spaces depuis GET /api/v1/me/spaces avec le bearer token', async () => {
@@ -196,18 +199,6 @@ describe('ContextSelector — options (UI 06A)', () => {
     const rh = screen.getByRole('menuitem', { name: /RH/ });
     expect(rh).toHaveAttribute('aria-disabled', 'true');
     expect(rh).toHaveTextContent('Profil utilisateur indisponible');
-  });
-
-  it('choisir Organisation ferme le menu et navigue vers /app/dashboard', async () => {
-    const user = userEvent.setup();
-    fetchMock.mockResolvedValue(jsonResponse(SPACES));
-    renderSelector();
-
-    await openMenu(user);
-    await user.click(screen.getByRole('menuitem', { name: /Organisation/ }));
-
-    expect(screen.getByTestId('location')).toHaveTextContent('/app/dashboard');
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('cliquer un Space selectable ne fabrique AUCUN contexte local : message sobre, pas de navigation', async () => {
@@ -341,18 +332,18 @@ describe('ContextSelector — clavier et ARIA (UI 06A)', () => {
     const search = screen.getByRole('textbox', { name: 'Rechercher un Space' });
     await waitFor(() => expect(search).toHaveFocus());
 
-    const organizationOption = screen.getByRole('menuitem', { name: /Organisation/ });
+    const finance = screen.getByRole('menuitem', { name: /Finance/ });
     await user.keyboard('{ArrowDown}');
-    expect(organizationOption).toHaveFocus();
+    expect(finance).toHaveFocus();
 
     await user.keyboard('{ArrowDown}');
-    expect(screen.getByRole('menuitem', { name: /Finance/ })).toHaveFocus();
+    expect(screen.getByRole('menuitem', { name: /Support/ })).toHaveFocus();
 
     await user.keyboard('{ArrowUp}');
-    expect(organizationOption).toHaveFocus();
+    expect(finance).toHaveFocus();
   });
 
-  it('la recherche filtre les Spaces sans jamais retirer l’Organisation', async () => {
+  it('la recherche filtre les Spaces par nom ou code', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValue(jsonResponse(SPACES));
     renderSelector();
@@ -364,7 +355,6 @@ describe('ContextSelector — clavier et ARIA (UI 06A)', () => {
 
     expect(screen.getByRole('menuitem', { name: /Finance/ })).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Support/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /Organisation/ })).toBeInTheDocument();
 
     await user.clear(screen.getByRole('textbox', { name: 'Rechercher un Space' }));
     await user.type(screen.getByRole('textbox', { name: 'Rechercher un Space' }), 'zzz');
