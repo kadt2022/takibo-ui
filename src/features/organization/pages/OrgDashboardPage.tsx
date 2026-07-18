@@ -115,10 +115,8 @@ function KpiTile({ kpi }: { kpi: DemoKpi }) {
 /**
  * Cartouche d'un compteur RÉEL de TAKIBO (aucun badge « Démonstration », aucune
  * tendance inventée). Un tiret honnête quand la valeur n'est pas disponible.
- * Le tableau de bord résume, le clic explique : une carte avec `to` ouvre son
- * écran de détail. Sans `to`, la carte reste informative — les clients OAuth2
- * n'ont pas encore d'écran organisationnel (leur administration est située par
- * Space ; le clic viendra avec un récit de read-side situé).
+ * Le tableau de bord résume, le clic explique : chaque carte ouvre l'écran
+ * de détail correspondant.
  */
 function RealKpiTile({
   icon: Icon,
@@ -133,38 +131,25 @@ function RealKpiTile({
   hint: string;
   value: number | undefined;
   loading: boolean;
-  to?: string;
+  to: string;
 }) {
-  const card = (
-    <Card
-      className={cn(
-        'flex items-start gap-4 p-5',
-        to && 'transition-colors duration-150 hover:border-primary/50 hover:bg-primary/5',
-      )}
-    >
-      <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
-        <Icon className="size-6" aria-hidden="true" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-sm text-text-muted">{label}</p>
-        <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-text">
-          {loading ? '…' : (value ?? '—')}
-        </p>
-        <p className="mt-0.5 text-xs text-text-muted">{hint}</p>
-      </div>
-    </Card>
-  );
-
-  if (!to) {
-    return card;
-  }
-
   return (
     <Link
       to={to}
       className="block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
-      {card}
+      <Card className="flex items-start gap-4 p-5 transition-colors duration-150 hover:border-primary/50 hover:bg-primary/5">
+        <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
+          <Icon className="size-6" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm text-text-muted">{label}</p>
+          <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-text">
+            {loading ? '…' : (value ?? '—')}
+          </p>
+          <p className="mt-0.5 text-xs text-text-muted">{hint}</p>
+        </div>
+      </Card>
     </Link>
   );
 }
@@ -267,6 +252,7 @@ export function OrgDashboardPage() {
               hint="dans l’organisation"
               value={summary.data?.oauthClientsTotal}
               loading={summary.isPending}
+              to="/app/organization/clients"
             />
           </div>
         </section>
