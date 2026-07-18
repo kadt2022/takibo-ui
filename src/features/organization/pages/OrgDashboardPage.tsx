@@ -102,9 +102,9 @@ function RealKpiTile({
   return (
     <Link
       to={to}
-      className="block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      className="block h-full rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
-      <Card className="flex items-start gap-4 p-5 transition-colors duration-150 hover:border-primary/50 hover:bg-primary/5">
+      <Card className="flex h-full items-start gap-4 p-5 transition-colors duration-150 hover:border-primary/50 hover:bg-primary/5">
         <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
           <Icon className="size-6" aria-hidden="true" />
         </span>
@@ -123,7 +123,7 @@ function RealKpiTile({
 /** Compteur d'attente explicite : valeur locale, aucun appel ni navigation. */
 function PlaceholderKpiTile({ icon: Icon, label }: { icon: IconType; label: string }) {
   return (
-    <Card className="flex items-start gap-4 p-5">
+    <Card className="flex h-full items-start gap-4 p-5">
       <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
         <Icon className="size-6" aria-hidden="true" />
       </span>
