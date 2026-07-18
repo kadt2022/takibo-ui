@@ -83,6 +83,7 @@ const DASHBOARD_SUMMARY = {
   usersTotal: 2,
   activeUsersTotal: 2,
   spacesTotal: 1,
+  oauthClientsTotal: 1,
   generatedAt: '2026-07-16T10:00:00Z',
 };
 
@@ -222,18 +223,24 @@ test.describe('Spaces réels (UI 03)', () => {
     await expect(page.getByText('comptes distincts de l’organisation')).toBeVisible();
     // activeUsersTotal reste dans le contrat API mais n'est plus affiché.
     await expect(page.getByText('au moins un profil actif')).toHaveCount(0);
-    // La rangée de démonstration ne porte plus qu'un rôle/groupe/client :
-    // Utilisateurs et Spaces viennent maintenant de /dashboard/summary.
-    await expect(page.getByText('vs période précédente')).toHaveCount(3);
+    // Clients OAuth2 est désormais un compteur réel du résumé, plus une démo.
+    await expect(page.getByText('Clients OAuth2')).toHaveCount(1);
+    // Plus aucune tuile KPI de démonstration : Rôles et Groupes sont devenus
+    // des entrées du menu latéral (réservées à l'autorité ORG).
+    await expect(page.getByText('vs période précédente')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Rôles', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Groupes', exact: true })).toBeVisible();
   });
 
-  test('un membre ne voit pas le menu Gestion des Spaces', async ({ page }) => {
+  test('un membre ne voit pas les menus réservés à l’autorité ORG', async ({ page }) => {
     await login(page, []);
 
-    // Mes Spaces reste visible (appartenance) ; l'inventaire admin est masqué.
+    // Mes Spaces reste visible (appartenance) ; les surfaces admin sont masquées.
     await expect(page.getByRole('link', { name: 'Mes Spaces', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Gestion des Spaces', exact: true })).toHaveCount(
       0,
     );
+    await expect(page.getByRole('link', { name: 'Rôles', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Groupes', exact: true })).toHaveCount(0);
   });
 });

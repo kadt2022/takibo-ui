@@ -94,23 +94,6 @@ export const demoOrganizationSpaces: DemoOrganizationSpace[] = [
   { id: 's-archive', code: 'archive', name: 'Archives', status: 'CREATING', users: 0 },
 ];
 
-/** Cartouches de tête du tableau de bord. */
-export interface DemoKpi {
-  key: string;
-  label: string;
-  value: number;
-  trend: number;
-  icon: 'users' | 'shield' | 'groups' | 'layers' | 'key';
-}
-
-export const demoKpis: DemoKpi[] = [
-  { key: 'users', label: 'Utilisateurs', value: 342, trend: 12, icon: 'users' },
-  { key: 'roles', label: 'Rôles', value: 28, trend: 8, icon: 'shield' },
-  { key: 'groups', label: 'Groupes', value: 16, trend: 6, icon: 'groups' },
-  { key: 'spaces', label: 'Spaces', value: 7, trend: 5, icon: 'layers' },
-  { key: 'clients', label: 'Clients OAuth2', value: 14, trend: 7, icon: 'key' },
-];
-
 /** Courbe d'activité sur 7 jours (3 séries). */
 export interface DemoSeries {
   name: string;

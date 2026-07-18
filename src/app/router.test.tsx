@@ -80,6 +80,7 @@ const DASHBOARD_SUMMARY_RESPONSE = {
   usersTotal: 2,
   activeUsersTotal: 2,
   spacesTotal: 3,
+  oauthClientsTotal: 1,
   generatedAt: '2026-07-16T10:00:00Z',
 };
 
@@ -151,6 +152,8 @@ describe('shell sous session ORGANIZATION', () => {
     expect(screen.getByRole('link', { name: 'Tableau de bord' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Mes Spaces' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Gestion des Spaces' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Rôles' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Groupes' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Paramètres' })).toBeInTheDocument();
   });
 

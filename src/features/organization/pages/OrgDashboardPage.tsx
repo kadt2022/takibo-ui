@@ -8,12 +8,10 @@ import {
   Plus,
   ScrollText,
   ShieldCheck,
-  TrendingUp,
   Trash2,
   TriangleAlert,
   UserPlus,
   Users,
-  UsersRound,
 } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -27,13 +25,12 @@ import { SpaceStatusPill } from '@/features/organization/components/SpaceStatusP
 import {
   demoActivity,
   demoAccessibleSpaces,
-  demoKpis,
   demoNotifications,
   demoRecentActivities,
   demoRoleDistribution,
   demoSpaceStatusDistribution,
 } from '@/shared/demo/demo';
-import type { ActivitySeverity, DemoKpi, NotificationSeverity } from '@/shared/demo/demo';
+import type { ActivitySeverity, NotificationSeverity } from '@/shared/demo/demo';
 import { useOrgDashboardSummary } from '@/features/dashboard/hooks/use-org-dashboard-summary';
 import { useOrganizationSpaces } from '@/features/spaces/hooks/use-organization-spaces';
 import { isOrgAdmin } from '@/shared/identity/roles';
@@ -41,14 +38,6 @@ import { useIdentity } from '@/shared/identity/useIdentity';
 import { cn } from '@/shared/utilities/cn';
 
 type IconType = ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
-
-const kpiIcons: Record<DemoKpi['icon'], IconType> = {
-  users: Users,
-  shield: ShieldCheck,
-  groups: UsersRound,
-  layers: Layers,
-  key: KeyRound,
-};
 
 const activityIcons: Record<string, IconType> = {
   'user-plus': UserPlus,
@@ -87,28 +76,6 @@ function PanelHeader({
       </div>
       {action}
     </div>
-  );
-}
-
-function KpiTile({ kpi }: { kpi: DemoKpi }) {
-  const Icon = kpiIcons[kpi.icon];
-  return (
-    <Card className="flex items-start gap-4 p-5">
-      <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
-        <Icon className="size-6" aria-hidden="true" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-sm text-text-muted">{kpi.label}</p>
-        <p className="mt-0.5 flex items-baseline gap-2">
-          <span className="font-mono text-2xl font-bold tabular-nums text-text">{kpi.value}</span>
-          <span className="inline-flex items-center gap-0.5 text-xs font-medium text-success">
-            <TrendingUp className="size-3" aria-hidden="true" />
-            {kpi.trend}%
-          </span>
-        </p>
-        <p className="mt-0.5 text-xs text-text-muted">vs période précédente</p>
-      </div>
-    </Card>
   );
 }
 
@@ -191,7 +158,7 @@ export function OrgDashboardPage() {
   const admin = isOrgAdmin(roles);
   // Chaque compteur réel a SA source, pour que les cartes se dégradent
   // indépendamment : si une surface backend est absente, elle seule affiche « — ».
-  //  - users : read-side dashboard (Dashboard 01) ;
+  //  - users / clients OAuth2 : read-side dashboard (Dashboard 01 et 02) ;
   //  - spaces : inventaire administratif, déjà en place depuis UI 03.
   const summary = useOrgDashboardSummary({ enabled: admin });
   const orgSpaces = useOrganizationSpaces({ page: 0, size: 1 }, { enabled: admin });
@@ -220,16 +187,16 @@ export function OrgDashboardPage() {
         </button>
       </header>
 
-      {/* Indicateurs RÉELS (autorité ORG) : comptes DISTINCTS de l'organisation
-          et total des Spaces, issus de /dashboard/summary. */}
+      {/* Indicateurs RÉELS (autorité ORG) : comptes DISTINCTS de l'organisation,
+          total des Spaces et clients OAuth2, issus de /dashboard/summary. */}
       {admin && !summaryForbidden && (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
             Indicateurs réels
           </h2>
-          {/* Le dashboard résume (2 agrégats), le clic explique : les statuts
+          {/* Le dashboard résume (3 agrégats), le clic explique : les statuts
               par profil appartiennent aux écrans de détail. */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <RealKpiTile
               icon={Users}
               label="Utilisateurs"
@@ -246,27 +213,17 @@ export function OrgDashboardPage() {
               loading={orgSpaces.isPending}
               to="/app/spaces"
             />
+            <RealKpiTile
+              icon={KeyRound}
+              label="Clients OAuth2"
+              hint="dans l’organisation"
+              value={summary.data?.oauthClientsTotal}
+              loading={summary.isPending}
+              to="/app/organization/clients"
+            />
           </div>
         </section>
       )}
-
-      {/* KPI encore simulés : situés par Space (rôles, groupes) ou en attente
-          d'un read-side organisationnel (clients OAuth2). */}
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
-            Indicateurs
-          </h2>
-          <DemoTag />
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {demoKpis
-            .filter((kpi) => kpi.key !== 'spaces' && kpi.key !== 'users')
-            .map((kpi) => (
-              <KpiTile key={kpi.key} kpi={kpi} />
-            ))}
-        </div>
-      </section>
 
       {/* Graphiques */}
       <section className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[1.5fr_1fr_1fr]">

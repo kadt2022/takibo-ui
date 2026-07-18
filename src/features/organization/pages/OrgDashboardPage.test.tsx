@@ -20,6 +20,7 @@ const SUMMARY = {
   usersTotal: 4242,
   activeUsersTotal: 3737,
   spacesTotal: 99,
+  oauthClientsTotal: 555,
   generatedAt: '2026-07-16T10:00:00Z',
 };
 
@@ -92,6 +93,8 @@ describe('OrgDashboardPage — compteurs réels (UI 04)', () => {
     // activeUsersTotal (3737) reste dans le contrat mais n'est PLUS affiché :
     // les statuts appartiennent aux écrans de détail, pas au dashboard.
     expect(screen.queryByText('3737')).not.toBeInTheDocument();
+    // Clients OAuth2 : compteur réel du résumé (récit Dashboard 02).
+    expect(screen.getByText('555')).toBeInTheDocument();
     // Spaces vient de l'inventaire administratif, pas du résumé.
     expect(await screen.findByText('88')).toBeInTheDocument();
     expect(screen.getByText('Indicateurs réels')).toBeInTheDocument();
@@ -110,18 +113,20 @@ describe('OrgDashboardPage — compteurs réels (UI 04)', () => {
     renderAs(['R_ORG_ADMIN']);
 
     expect(await screen.findByText('88')).toBeInTheDocument();
-    expect(screen.getByText('dans l’organisation')).toBeInTheDocument();
+    // Le libellé apparaît sur les cartes Spaces ET Clients OAuth2 (qui affiche
+    // « — » quand le résumé est indisponible).
+    expect(screen.getAllByText('dans l’organisation')).toHaveLength(2);
   });
 
-  it('retire « Utilisateurs » et « Spaces » de la rangée de démonstration', async () => {
+  it('ne montre plus aucune tuile KPI de démonstration', async () => {
     fetchMock.mockImplementation((url: string) => routedFetch(url));
 
     renderAs(['R_ORG_OWNER']);
 
     await screen.findByText('4242');
-    // La rangée démo ne garde que Rôles, Groupes et Clients OAuth2 : les cartes
-    // Utilisateurs et Spaces sont désormais réelles (5 tuiles démo → 3).
-    expect(screen.getAllByText('vs période précédente')).toHaveLength(3);
+    // La rangée démo a disparu : Utilisateurs, Spaces et Clients OAuth2 sont
+    // réels ; Rôles et Groupes sont devenus des entrées du menu latéral.
+    expect(screen.queryAllByText('vs période précédente')).toHaveLength(0);
   });
 
   it('masque toute la surface réelle quand la frontière refuse le résumé (403)', async () => {

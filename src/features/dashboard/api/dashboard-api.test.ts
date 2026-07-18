@@ -14,6 +14,7 @@ const SUMMARY = {
   usersTotal: 2,
   activeUsersTotal: 2,
   spacesTotal: 1,
+  oauthClientsTotal: 1,
   generatedAt: '2026-07-16T10:00:00Z',
 };
 
@@ -35,6 +36,7 @@ describe('fetchOrganizationDashboardSummary', () => {
     expect(summary.usersTotal).toBe(2);
     expect(summary.activeUsersTotal).toBe(2);
     expect(summary.spacesTotal).toBe(1);
+    expect(summary.oauthClientsTotal).toBe(1);
 
     const call = fetchMock.mock.calls[0]!;
     expect(call[0]).toBe('/api/v1/orgs/org-uuid/dashboard/summary');
