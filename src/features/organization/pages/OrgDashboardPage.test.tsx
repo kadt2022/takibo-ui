@@ -99,12 +99,13 @@ describe('OrgDashboardPage — compteurs réels (UI 04)', () => {
     expect(await screen.findByText('88')).toBeInTheDocument();
     expect(screen.getByText('Indicateurs réels')).toBeInTheDocument();
     expect(screen.getByText('comptes distincts de l’organisation')).toBeInTheDocument();
-    expect(screen.getByText('Rôles')).toBeInTheDocument();
-    expect(screen.getByText('Groupes')).toBeInTheDocument();
-    expect(screen.getAllByText('0')).toHaveLength(2);
+    const rolesLabel = screen.getByText('Rôles');
+    const groupsLabel = screen.getByText('Groupes');
+    expect(rolesLabel.nextElementSibling).toHaveTextContent('0');
+    expect(groupsLabel.nextElementSibling).toHaveTextContent('0');
     expect(screen.getAllByText('bientôt disponible')).toHaveLength(2);
-    expect(screen.getByText('Rôles').closest('a')).toBeNull();
-    expect(screen.getByText('Groupes').closest('a')).toBeNull();
+    expect(rolesLabel.closest('a')).toBeNull();
+    expect(groupsLabel.closest('a')).toBeNull();
 
     const urls = fetchMock.mock.calls.map((call) => call[0] as string);
     expect(urls).toContain('/api/v1/orgs/org-uuid/dashboard/summary');
