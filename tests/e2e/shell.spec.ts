@@ -138,10 +138,14 @@ test.describe('Session organisationnelle (UI 02)', () => {
 
     await login(page);
 
-    // Plus d'en-tête de bienvenue sur le dashboard : l'identité réelle est
-    // portée par la TopBar (contexte + email).
-    await expect(page.getByText('Contexte actuel')).toBeVisible();
+    // TopBar minimale : identité réelle + déconnexion, rien d'autre — plus de
+    // badge contexte, de barre de recherche, de minuteur ni de notifications.
     await expect(page.getByText('john.doe@acme.com').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Se déconnecter' })).toBeVisible();
+    await expect(page.getByText('Contexte actuel')).toHaveCount(0);
+    await expect(page.getByText('Rechercher…')).toHaveCount(0);
+    await expect(page.getByText(/Session jusqu’à/)).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Notifications' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /Bienvenue/ })).toHaveCount(0);
   });
 
@@ -179,15 +183,6 @@ test.describe('Session organisationnelle (UI 02)', () => {
     // La session vit en mémoire : revenir en arrière ne rouvre pas le shell.
     await page.goto('/app/dashboard');
     await expect(page).toHaveURL(/\/login$/);
-  });
-
-  test('bascule le thème clair/sombre', async ({ page }) => {
-    await login(page);
-    const html = page.locator('html');
-    await expect(html).toHaveAttribute('data-theme', 'dark');
-
-    await page.getByRole('button', { name: 'Passer au thème clair' }).click();
-    await expect(html).toHaveAttribute('data-theme', 'light');
   });
 
   test('le tiroir mobile reste complet même après un repli desktop', async ({ page }) => {
@@ -279,7 +274,7 @@ test.describe('Sélecteur de contexte (UI 06A)', () => {
         'L’ouverture sécurisée du Space sera disponible avec l’établissement du contexte Space.',
       ),
     ).toBeVisible();
-    await expect(page.getByText('Contexte actuel')).toBeVisible();
+    await expect(page.getByText('john.doe@acme.com').first()).toBeVisible();
 
     // Escape ferme le menu ; le contexte reste Organisation.
     await page.keyboard.press('Escape');
