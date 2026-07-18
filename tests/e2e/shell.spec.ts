@@ -138,13 +138,12 @@ test.describe('Session organisationnelle (UI 02)', () => {
 
     await login(page);
 
-    // TopBar minimale : identité réelle + déconnexion, rien d'autre — plus de
-    // badge contexte, de barre de recherche, de minuteur ni de notifications.
+    // TopBar minimale : expiration de session, identité réelle et déconnexion.
     await expect(page.getByText('john.doe@acme.com').first()).toBeVisible();
     await expect(page.getByRole('button', { name: 'Se déconnecter' })).toBeVisible();
     await expect(page.getByText('Contexte actuel')).toHaveCount(0);
     await expect(page.getByText('Rechercher…')).toHaveCount(0);
-    await expect(page.getByText(/Session jusqu’à/)).toHaveCount(0);
+    await expect(page.getByText(/Session jusqu’à/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Notifications' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /Bienvenue/ })).toHaveCount(0);
   });

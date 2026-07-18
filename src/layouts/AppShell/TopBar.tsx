@@ -1,4 +1,4 @@
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu, Timer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { useIdentity } from '@/shared/identity/useIdentity';
@@ -8,14 +8,18 @@ interface TopBarProps {
   onOpenMenu: () => void;
 }
 
+/** Heure d'expiration de la preuve, dérivée purement de expiresAt. */
+function formatExpiry(expiresAt: number): string {
+  return new Date(expiresAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
 /**
- * Barre supérieure volontairement minimale : l'identité réelle de la session
- * et la déconnexion, rien d'autre. Le contexte est porté par le sélecteur de
- * la Sidebar ; recherche, notifications et minuteur de session ont été retirés
- * tant qu'ils ne sont pas branchés sur de vraies surfaces.
+ * Barre supérieure volontairement minimale : expiration, identité réelle de la
+ * session et déconnexion. Le contexte reste porté par le sélecteur de la Sidebar.
  */
 export function TopBar({ onOpenMenu }: TopBarProps) {
-  const { email, roleLabel, roleCode, orgCode, organizationId, avatarInitial } = useIdentity();
+  const { email, roleLabel, roleCode, orgCode, organizationId, avatarInitial, expiresAt } =
+    useIdentity();
   const { closeSession } = useSession();
   const navigate = useNavigate();
 
@@ -36,6 +40,13 @@ export function TopBar({ onOpenMenu }: TopBarProps) {
       </button>
 
       <div className="ml-auto flex items-center gap-2">
+        <span
+          className="hidden items-center gap-1.5 rounded-full border border-border bg-background/50 px-2.5 py-1 text-[11px] text-text-muted lg:inline-flex"
+          title="Heure d’expiration de la preuve de session."
+        >
+          <Timer className="size-3.5" aria-hidden="true" />
+          Session jusqu’à {formatExpiry(expiresAt)}
+        </span>
         <div
           className="flex items-center gap-2.5 rounded-full border border-border py-1 pl-1 pr-2.5"
           title={`${roleCode ?? 'sans rôle'} · organisation ${orgCode} (${organizationId})`}
