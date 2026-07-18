@@ -105,7 +105,7 @@ async function renderLoggedIn(user: UserEvent) {
   await user.type(screen.getByLabelText('Adresse courriel'), 'john.doe@acme.com');
   await user.type(screen.getByLabelText('Mot de passe'), 'secret123');
   await user.click(screen.getByRole('button', { name: 'Se connecter' }));
-  await screen.findByRole('heading', { name: /Bienvenue, john\.doe@acme\.com/ });
+  await screen.findByText('Contexte actuel');
   return router;
 }
 

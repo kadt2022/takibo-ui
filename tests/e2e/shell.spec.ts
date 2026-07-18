@@ -138,10 +138,11 @@ test.describe('Session organisationnelle (UI 02)', () => {
 
     await login(page);
 
-    await expect(
-      page.getByRole('heading', { name: /Bienvenue, john\.doe@acme\.com/ }),
-    ).toBeVisible();
+    // Plus d'en-tête de bienvenue sur le dashboard : l'identité réelle est
+    // portée par la TopBar (contexte + email).
     await expect(page.getByText('Contexte actuel')).toBeVisible();
+    await expect(page.getByText('john.doe@acme.com').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Bienvenue/ })).toHaveCount(0);
   });
 
   test('protège /app/** : sans session, redirige vers /login', async ({ page }) => {

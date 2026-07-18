@@ -1,6 +1,5 @@
 import {
   ArrowRight,
-  Calendar,
   ChevronDown,
   ChevronRight,
   KeyRound,
@@ -154,7 +153,7 @@ function QuickAction({
 }
 
 export function OrgDashboardPage() {
-  const { email, orgCode, roleLabel, roles } = useIdentity();
+  const { roles } = useIdentity();
   const admin = isOrgAdmin(roles);
   // Chaque compteur réel a SA source, pour que les cartes se dégradent
   // indépendamment : si une surface backend est absente, elle seule affiche « — ».
@@ -169,24 +168,9 @@ export function OrgDashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* En-tête */}
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-text">Bienvenue, {email} 👋</h1>
-          <p className="mt-1 text-sm text-text-muted">
-            Contexte : Organisation · {orgCode} — {roleLabel}
-          </p>
-        </div>
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3.5 py-2 text-sm text-text-muted"
-        >
-          <Calendar className="size-4" aria-hidden="true" />
-          12 mai 2024 – 19 mai 2024
-          <ChevronDown className="size-4" aria-hidden="true" />
-        </button>
-      </header>
-
+      {/* Pas d'en-tête de bienvenue : l'identité et le contexte sont déjà
+          portés par la TopBar et la Sidebar — le dashboard va droit aux
+          indicateurs. */}
       {/* Indicateurs RÉELS (autorité ORG) : comptes DISTINCTS de l'organisation,
           total des Spaces et clients OAuth2, issus de /dashboard/summary. */}
       {admin && !summaryForbidden && (
