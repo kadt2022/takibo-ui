@@ -291,7 +291,11 @@ describe('ContextSelector — états du contrat /me/spaces (UI 06A)', () => {
     renderSelector();
 
     await openMenu(user);
-    expect(await screen.findByText('Impossible de charger vos Spaces.')).toBeInTheDocument();
+    // Le hook fait UN retry automatique avec le backoff react-query (~1 s) :
+    // le timeout doit dépasser ce délai, sinon le test court contre le backoff.
+    expect(
+      await screen.findByText('Impossible de charger vos Spaces.', undefined, { timeout: 4000 }),
+    ).toBeInTheDocument();
 
     fetchMock.mockResolvedValue(jsonResponse(SPACES));
     await user.click(screen.getByRole('button', { name: 'Réessayer' }));
