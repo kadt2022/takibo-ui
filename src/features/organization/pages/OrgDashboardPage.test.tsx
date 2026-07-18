@@ -118,15 +118,15 @@ describe('OrgDashboardPage — compteurs réels (UI 04)', () => {
     expect(screen.getAllByText('dans l’organisation')).toHaveLength(2);
   });
 
-  it('retire « Utilisateurs » et « Spaces » de la rangée de démonstration', async () => {
+  it('ne montre plus aucune tuile KPI de démonstration', async () => {
     fetchMock.mockImplementation((url: string) => routedFetch(url));
 
     renderAs(['R_ORG_OWNER']);
 
     await screen.findByText('4242');
-    // La rangée démo ne garde que Rôles et Groupes : les cartes Utilisateurs,
-    // Spaces et Clients OAuth2 sont désormais réelles (5 tuiles démo → 2).
-    expect(screen.getAllByText('vs période précédente')).toHaveLength(2);
+    // La rangée démo a disparu : Utilisateurs, Spaces et Clients OAuth2 sont
+    // réels ; Rôles et Groupes sont devenus des entrées du menu latéral.
+    expect(screen.queryAllByText('vs période précédente')).toHaveLength(0);
   });
 
   it('masque toute la surface réelle quand la frontière refuse le résumé (403)', async () => {

@@ -152,6 +152,8 @@ describe('shell sous session ORGANIZATION', () => {
     expect(screen.getByRole('link', { name: 'Tableau de bord' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Mes Spaces' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Gestion des Spaces' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Rôles' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Groupes' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Paramètres' })).toBeInTheDocument();
   });
 
