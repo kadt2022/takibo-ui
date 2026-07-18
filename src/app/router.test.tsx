@@ -80,6 +80,7 @@ const DASHBOARD_SUMMARY_RESPONSE = {
   usersTotal: 2,
   activeUsersTotal: 2,
   spacesTotal: 3,
+  oauthClientsTotal: 1,
   generatedAt: '2026-07-16T10:00:00Z',
 };
 

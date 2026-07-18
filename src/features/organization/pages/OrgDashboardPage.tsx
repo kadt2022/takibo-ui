@@ -115,8 +115,10 @@ function KpiTile({ kpi }: { kpi: DemoKpi }) {
 /**
  * Cartouche d'un compteur RÉEL de TAKIBO (aucun badge « Démonstration », aucune
  * tendance inventée). Un tiret honnête quand la valeur n'est pas disponible.
- * Le tableau de bord résume, le clic explique : chaque carte ouvre l'écran
- * de détail correspondant.
+ * Le tableau de bord résume, le clic explique : une carte avec `to` ouvre son
+ * écran de détail. Sans `to`, la carte reste informative — les clients OAuth2
+ * n'ont pas encore d'écran organisationnel (leur administration est située par
+ * Space ; le clic viendra avec un récit de read-side situé).
  */
 function RealKpiTile({
   icon: Icon,
@@ -131,25 +133,38 @@ function RealKpiTile({
   hint: string;
   value: number | undefined;
   loading: boolean;
-  to: string;
+  to?: string;
 }) {
+  const card = (
+    <Card
+      className={cn(
+        'flex items-start gap-4 p-5',
+        to && 'transition-colors duration-150 hover:border-primary/50 hover:bg-primary/5',
+      )}
+    >
+      <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
+        <Icon className="size-6" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm text-text-muted">{label}</p>
+        <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-text">
+          {loading ? '…' : (value ?? '—')}
+        </p>
+        <p className="mt-0.5 text-xs text-text-muted">{hint}</p>
+      </div>
+    </Card>
+  );
+
+  if (!to) {
+    return card;
+  }
+
   return (
     <Link
       to={to}
       className="block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
-      <Card className="flex items-start gap-4 p-5 transition-colors duration-150 hover:border-primary/50 hover:bg-primary/5">
-        <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
-          <Icon className="size-6" aria-hidden="true" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-sm text-text-muted">{label}</p>
-          <p className="mt-0.5 font-mono text-2xl font-bold tabular-nums text-text">
-            {loading ? '…' : (value ?? '—')}
-          </p>
-          <p className="mt-0.5 text-xs text-text-muted">{hint}</p>
-        </div>
-      </Card>
+      {card}
     </Link>
   );
 }
@@ -191,7 +206,7 @@ export function OrgDashboardPage() {
   const admin = isOrgAdmin(roles);
   // Chaque compteur réel a SA source, pour que les cartes se dégradent
   // indépendamment : si une surface backend est absente, elle seule affiche « — ».
-  //  - users : read-side dashboard (Dashboard 01) ;
+  //  - users / clients OAuth2 : read-side dashboard (Dashboard 01 et 02) ;
   //  - spaces : inventaire administratif, déjà en place depuis UI 03.
   const summary = useOrgDashboardSummary({ enabled: admin });
   const orgSpaces = useOrganizationSpaces({ page: 0, size: 1 }, { enabled: admin });
@@ -220,16 +235,16 @@ export function OrgDashboardPage() {
         </button>
       </header>
 
-      {/* Indicateurs RÉELS (autorité ORG) : comptes DISTINCTS de l'organisation
-          et total des Spaces, issus de /dashboard/summary. */}
+      {/* Indicateurs RÉELS (autorité ORG) : comptes DISTINCTS de l'organisation,
+          total des Spaces et clients OAuth2, issus de /dashboard/summary. */}
       {admin && !summaryForbidden && (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
             Indicateurs réels
           </h2>
-          {/* Le dashboard résume (2 agrégats), le clic explique : les statuts
+          {/* Le dashboard résume (3 agrégats), le clic explique : les statuts
               par profil appartiennent aux écrans de détail. */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <RealKpiTile
               icon={Users}
               label="Utilisateurs"
@@ -246,12 +261,18 @@ export function OrgDashboardPage() {
               loading={orgSpaces.isPending}
               to="/app/spaces"
             />
+            <RealKpiTile
+              icon={KeyRound}
+              label="Clients OAuth2"
+              hint="dans l’organisation"
+              value={summary.data?.oauthClientsTotal}
+              loading={summary.isPending}
+            />
           </div>
         </section>
       )}
 
-      {/* KPI encore simulés : situés par Space (rôles, groupes) ou en attente
-          d'un read-side organisationnel (clients OAuth2). */}
+      {/* KPI encore simulés : situés par Space (rôles, groupes). */}
       <section className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
@@ -261,7 +282,7 @@ export function OrgDashboardPage() {
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {demoKpis
-            .filter((kpi) => kpi.key !== 'spaces' && kpi.key !== 'users')
+            .filter((kpi) => kpi.key !== 'spaces' && kpi.key !== 'users' && kpi.key !== 'clients')
             .map((kpi) => (
               <KpiTile key={kpi.key} kpi={kpi} />
             ))}
