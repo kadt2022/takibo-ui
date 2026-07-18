@@ -56,13 +56,15 @@ export function ContextSelector({ collapsed = false }: { collapsed?: boolean }) 
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [open, close]);
 
-  // À l'ouverture : focus sur la première option (ou le panneau si aucune).
+  // À l'ouverture : focus sur la recherche (visible immédiatement, façon
+  // GitHub) — à défaut la première option, à défaut le panneau.
   useEffect(() => {
     if (!open) {
       return;
     }
+    const search = menuRef.current?.querySelector<HTMLElement>('input');
     const first = menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]');
-    (first ?? menuRef.current)?.focus();
+    (search ?? first ?? menuRef.current)?.focus();
   }, [open]);
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -72,6 +74,14 @@ export function ContextSelector({ collapsed = false }: { collapsed?: boolean }) 
       return;
     }
     if (!open || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+      return;
+    }
+    // Dans le champ de recherche, Home/End gardent leur sens texte ; seules les
+    // flèches basculent vers la liste d'options.
+    if (
+      document.activeElement instanceof HTMLInputElement &&
+      (event.key === 'Home' || event.key === 'End')
+    ) {
       return;
     }
     const items = Array.from(

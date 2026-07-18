@@ -11,9 +11,10 @@ interface SpaceContextOptionProps {
 }
 
 /**
- * Une option Space du sélecteur. `selectable = false` reste VISIBLE mais
- * désactivée (aria-disabled, pas de retrait du DOM) : les technologies
- * d'assistance lisent le Space et la raison de son indisponibilité.
+ * Une option Space du sélecteur : nom, code, statut réel. `selectable = false`
+ * reste VISIBLE mais désactivée (aria-disabled, pas de retrait du DOM), avec la
+ * raison d'indisponibilité dérivée des données du contrat — les technologies
+ * d'assistance lisent le Space et sa raison.
  */
 export function SpaceContextOption({ space, onSelect }: SpaceContextOptionProps) {
   const disabled = !space.selectable;
@@ -33,7 +34,7 @@ export function SpaceContextOption({ space, onSelect }: SpaceContextOptionProps)
         'focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary',
         disabled
           ? 'cursor-not-allowed opacity-60'
-          : 'text-text-muted transition-colors duration-150 hover:bg-background/60 hover:text-text',
+          : 'transition-colors duration-150 hover:bg-primary/10',
       )}
     >
       {/* Colonne de la coche (vide : aucun Space n'est le contexte actif en UI 06A). */}
@@ -44,7 +45,8 @@ export function SpaceContextOption({ space, onSelect }: SpaceContextOptionProps)
       <span className="min-w-0 flex-1 leading-tight">
         <span className="block truncate font-medium text-text">{space.name}</span>
         <span className="block truncate text-xs text-text-muted">
-          {disabled ? spaceUnavailabilityReason(space) : space.code}
+          {space.code}
+          {disabled && ` — Indisponible · ${spaceUnavailabilityReason(space)}`}
         </span>
       </span>
       <SpaceStatusPill status={space.spaceStatus} />

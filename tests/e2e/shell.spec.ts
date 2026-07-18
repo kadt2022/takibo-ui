@@ -259,6 +259,9 @@ test.describe('Sélecteur de contexte (UI 06A)', () => {
 
     const menu = page.getByRole('menu', { name: 'Changer de contexte' });
     await expect(menu).toBeVisible();
+    // Popover façon GitHub : titre + recherche visibles immédiatement.
+    await expect(menu.getByText('Changer de contexte')).toBeVisible();
+    await expect(menu.getByPlaceholder('Rechercher un Space...')).toBeVisible();
     await expect(menu.getByRole('menuitem', { name: /Organisation/ })).toHaveAttribute(
       'aria-current',
       'true',

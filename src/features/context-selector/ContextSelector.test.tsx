@@ -326,7 +326,7 @@ describe('ContextSelector — états du contrat /me/spaces (UI 06A)', () => {
 });
 
 describe('ContextSelector — clavier et ARIA (UI 06A)', () => {
-  it('focus la première option à l’ouverture, flèches pour circuler', async () => {
+  it('focus la recherche à l’ouverture, flèches pour circuler dans les options', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValue(jsonResponse(SPACES));
     renderSelector();
@@ -334,14 +334,37 @@ describe('ContextSelector — clavier et ARIA (UI 06A)', () => {
     await openMenu(user);
     await screen.findByText('Finance');
 
+    const search = screen.getByRole('textbox', { name: 'Rechercher un Space' });
+    await waitFor(() => expect(search).toHaveFocus());
+
     const organizationOption = screen.getByRole('menuitem', { name: /Organisation/ });
-    await waitFor(() => expect(organizationOption).toHaveFocus());
+    await user.keyboard('{ArrowDown}');
+    expect(organizationOption).toHaveFocus();
 
     await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('menuitem', { name: /Finance/ })).toHaveFocus();
 
     await user.keyboard('{ArrowUp}');
     expect(organizationOption).toHaveFocus();
+  });
+
+  it('la recherche filtre les Spaces sans jamais retirer l’Organisation', async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValue(jsonResponse(SPACES));
+    renderSelector();
+
+    await openMenu(user);
+    await screen.findByText('Finance');
+
+    await user.type(screen.getByRole('textbox', { name: 'Rechercher un Space' }), 'fin');
+
+    expect(screen.getByRole('menuitem', { name: /Finance/ })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Support/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /Organisation/ })).toBeInTheDocument();
+
+    await user.clear(screen.getByRole('textbox', { name: 'Rechercher un Space' }));
+    await user.type(screen.getByRole('textbox', { name: 'Rechercher un Space' }), 'zzz');
+    expect(screen.getByText(/Aucun Space ne correspond à/)).toBeInTheDocument();
   });
 
   it('Escape ferme le menu et restaure le focus sur le bouton', async () => {

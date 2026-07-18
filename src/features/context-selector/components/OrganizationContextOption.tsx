@@ -23,9 +23,9 @@ export function OrganizationContextOption({
       onClick={onSelect}
       className={cn(
         'flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left text-sm',
-        'transition-colors duration-150 hover:bg-background/60',
+        'transition-colors duration-150 hover:bg-primary/10',
         'focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary',
-        active ? 'text-text' : 'text-text-muted',
+        active ? 'bg-primary/5 text-text' : 'text-text-muted',
       )}
     >
       <Check

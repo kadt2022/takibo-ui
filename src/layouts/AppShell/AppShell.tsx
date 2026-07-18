@@ -27,11 +27,13 @@ export function AppShell() {
         />
       )}
 
+      {/* z-40 conservé aussi sur desktop (flex item) : le popover du sélecteur
+          de contexte doit peindre AU-DESSUS des cartes translucides du contenu. */}
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-40 border-r border-border transition-[transform,width] duration-200',
           'w-[260px]',
-          'lg:static lg:z-auto lg:shrink-0 lg:translate-x-0',
+          'lg:static lg:shrink-0 lg:translate-x-0',
           collapsed ? 'lg:w-[76px]' : 'lg:w-[260px]',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         )}

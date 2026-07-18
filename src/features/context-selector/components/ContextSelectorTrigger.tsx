@@ -1,4 +1,4 @@
-import { Building2, ChevronsUpDown } from 'lucide-react';
+import { Building2, ChevronDown } from 'lucide-react';
 import type { RefObject } from 'react';
 
 import { cn } from '@/shared/utilities/cn';
@@ -13,8 +13,8 @@ interface ContextSelectorTriggerProps {
 }
 
 /**
- * Bouton du sélecteur de contexte — l'ancienne carte Organisation de la barre
- * latérale, devenue déclencheur (façon sélecteur de repository GitHub).
+ * Bouton du sélecteur de contexte — toute la carte Organisation est cliquable,
+ * avec un unique chevron à droite qui pivote à l'ouverture (façon GitHub).
  */
 export function ContextSelectorTrigger({
   orgCode,
@@ -36,6 +36,7 @@ export function ContextSelectorTrigger({
         'flex w-full items-center gap-3 rounded-md border border-border bg-background/40 p-2.5 text-left',
         'transition-colors duration-150 hover:border-primary/50 hover:bg-primary/5',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+        open && 'border-primary/50 bg-primary/5',
         collapsed && 'lg:justify-center',
       )}
     >
@@ -46,8 +47,12 @@ export function ContextSelectorTrigger({
         <span className="block truncate text-sm font-semibold text-text">{orgCode}</span>
         <span className="block truncate text-xs text-text-muted">Organisation</span>
       </span>
-      <ChevronsUpDown
-        className={cn('size-4 shrink-0 text-text-muted', collapsed && 'lg:hidden')}
+      <ChevronDown
+        className={cn(
+          'size-4 shrink-0 text-text-muted transition-transform duration-150',
+          open && 'rotate-180',
+          collapsed && 'lg:hidden',
+        )}
         aria-hidden="true"
       />
     </button>
