@@ -99,6 +99,13 @@ describe('OrgDashboardPage — compteurs réels (UI 04)', () => {
     expect(await screen.findByText('88')).toBeInTheDocument();
     expect(screen.getByText('Indicateurs réels')).toBeInTheDocument();
     expect(screen.getByText('comptes distincts de l’organisation')).toBeInTheDocument();
+    const rolesLabel = screen.getByText('Rôles');
+    const groupsLabel = screen.getByText('Groupes');
+    expect(rolesLabel.nextElementSibling).toHaveTextContent('0');
+    expect(groupsLabel.nextElementSibling).toHaveTextContent('0');
+    expect(screen.getAllByText('bientôt disponible')).toHaveLength(2);
+    expect(rolesLabel.closest('a')).toBeNull();
+    expect(groupsLabel.closest('a')).toBeNull();
 
     const urls = fetchMock.mock.calls.map((call) => call[0] as string);
     expect(urls).toContain('/api/v1/orgs/org-uuid/dashboard/summary');
@@ -124,8 +131,8 @@ describe('OrgDashboardPage — compteurs réels (UI 04)', () => {
     renderAs(['R_ORG_OWNER']);
 
     await screen.findByText('4242');
-    // La rangée démo a disparu : Utilisateurs, Spaces et Clients OAuth2 sont
-    // réels ; Rôles et Groupes sont devenus des entrées du menu latéral.
+    // La rangée démo a disparu : les nouvelles cartes Rôles et Groupes sont
+    // des emplacements statiques à 0, sans tendance inventée.
     expect(screen.queryAllByText('vs période précédente')).toHaveLength(0);
   });
 

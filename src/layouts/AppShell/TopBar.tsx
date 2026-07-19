@@ -1,10 +1,8 @@
-import { Bell, LogOut, Menu, Moon, Search, Sun, Timer } from 'lucide-react';
+import { LogOut, Menu, Timer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { ContextBadge } from '@/layouts/AppShell/ContextBadge';
 import { useIdentity } from '@/shared/identity/useIdentity';
 import { useSession } from '@/shared/security/session-context';
-import { useTheme } from '@/shared/theme/useTheme';
 
 interface TopBarProps {
   onOpenMenu: () => void;
@@ -15,12 +13,15 @@ function formatExpiry(expiresAt: number): string {
   return new Date(expiresAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
+/**
+ * Barre supérieure volontairement minimale : expiration, identité réelle de la
+ * session et déconnexion. Le contexte reste porté par le sélecteur de la Sidebar.
+ */
 export function TopBar({ onOpenMenu }: TopBarProps) {
-  const { email, roleLabel, roleCode, orgCode, organizationId, avatarInitial, context, expiresAt } =
+  const { email, roleLabel, roleCode, orgCode, organizationId, avatarInitial, expiresAt } =
     useIdentity();
   const { closeSession } = useSession();
   const navigate = useNavigate();
-  const { theme, toggle } = useTheme();
 
   const logout = () => {
     closeSession();
@@ -38,16 +39,6 @@ export function TopBar({ onOpenMenu }: TopBarProps) {
         <Menu className="size-[18px]" aria-hidden="true" />
       </button>
 
-      <ContextBadge scope={context} />
-
-      <div className="ml-1 hidden max-w-md flex-1 items-center gap-2 rounded-full border border-border bg-background/50 px-3.5 py-2 text-sm text-text-muted md:flex">
-        <Search className="size-4" aria-hidden="true" />
-        <span>Rechercher…</span>
-        <kbd className="ml-auto rounded border border-border px-1.5 py-0.5 font-mono text-[10px]">
-          ⌘K
-        </kbd>
-      </div>
-
       <div className="ml-auto flex items-center gap-2">
         <span
           className="hidden items-center gap-1.5 rounded-full border border-border bg-background/50 px-2.5 py-1 text-[11px] text-text-muted lg:inline-flex"
@@ -56,28 +47,6 @@ export function TopBar({ onOpenMenu }: TopBarProps) {
           <Timer className="size-3.5" aria-hidden="true" />
           Session jusqu’à {formatExpiry(expiresAt)}
         </span>
-
-        <button
-          type="button"
-          onClick={toggle}
-          className="grid size-9 place-items-center rounded-md border border-border text-text-muted hover:text-text"
-          aria-label={theme === 'dark' ? 'Passer au thème clair' : 'Passer au thème sombre'}
-        >
-          {theme === 'dark' ? (
-            <Sun className="size-[18px]" aria-hidden="true" />
-          ) : (
-            <Moon className="size-[18px]" aria-hidden="true" />
-          )}
-        </button>
-
-        <button
-          type="button"
-          className="relative grid size-9 place-items-center rounded-md border border-border text-text-muted hover:text-text"
-          aria-label="Notifications"
-        >
-          <Bell className="size-[18px]" aria-hidden="true" />
-        </button>
-
         <div
           className="flex items-center gap-2.5 rounded-full border border-border py-1 pl-1 pr-2.5"
           title={`${roleCode ?? 'sans rôle'} · organisation ${orgCode} (${organizationId})`}

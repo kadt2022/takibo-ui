@@ -138,10 +138,14 @@ test.describe('Session organisationnelle (UI 02)', () => {
 
     await login(page);
 
-    await expect(
-      page.getByRole('heading', { name: /Bienvenue, john\.doe@acme\.com/ }),
-    ).toBeVisible();
-    await expect(page.getByText('Contexte actuel')).toBeVisible();
+    // TopBar minimale : expiration de session, identité réelle et déconnexion.
+    await expect(page.getByText('john.doe@acme.com').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Se déconnecter' })).toBeVisible();
+    await expect(page.getByText('Contexte actuel')).toHaveCount(0);
+    await expect(page.getByText('Rechercher…')).toHaveCount(0);
+    await expect(page.getByText(/Session jusqu’à/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Notifications' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /Bienvenue/ })).toHaveCount(0);
   });
 
   test('protège /app/** : sans session, redirige vers /login', async ({ page }) => {
@@ -180,15 +184,6 @@ test.describe('Session organisationnelle (UI 02)', () => {
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test('bascule le thème clair/sombre', async ({ page }) => {
-    await login(page);
-    const html = page.locator('html');
-    await expect(html).toHaveAttribute('data-theme', 'dark');
-
-    await page.getByRole('button', { name: 'Passer au thème clair' }).click();
-    await expect(html).toHaveAttribute('data-theme', 'light');
-  });
-
   test('le tiroir mobile reste complet même après un repli desktop', async ({ page }) => {
     await login(page);
 
@@ -225,11 +220,12 @@ test.describe('Spaces réels (UI 03)', () => {
     await expect(page.getByText('au moins un profil actif')).toHaveCount(0);
     // Clients OAuth2 est désormais un compteur réel du résumé, plus une démo.
     await expect(page.getByText('Clients OAuth2')).toHaveCount(1);
-    // Plus aucune tuile KPI de démonstration : Rôles et Groupes sont devenus
-    // des entrées du menu latéral (réservées à l'autorité ORG).
+    // Plus aucune tuile KPI de démonstration sur le tableau de bord.
     await expect(page.getByText('vs période précédente')).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'Rôles', exact: true })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Groupes', exact: true })).toBeVisible();
+    // Aucun lien n'est exposé avant que sa route réelle existe.
+    await expect(page.getByRole('link', { name: 'Utilisateurs', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Rôles', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Groupes', exact: true })).toHaveCount(0);
   });
 
   test('un membre ne voit pas les menus réservés à l’autorité ORG', async ({ page }) => {
@@ -240,7 +236,46 @@ test.describe('Spaces réels (UI 03)', () => {
     await expect(page.getByRole('link', { name: 'Gestion des Spaces', exact: true })).toHaveCount(
       0,
     );
-    await expect(page.getByRole('link', { name: 'Rôles', exact: true })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'Groupes', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Utilisateurs', exact: true })).toHaveCount(0);
+  });
+});
+
+test.describe('Sélecteur de contexte (UI 06A)', () => {
+  test('ouvre le sélecteur, liste les Spaces réels et refuse un faux contexte Space', async ({
+    page,
+  }) => {
+    await login(page);
+
+    // Le bloc Organisation de la barre latérale est devenu un déclencheur.
+    const selectorButton = page.getByRole('button', { name: 'acme Organisation' });
+    await selectorButton.click();
+
+    const menu = page.getByRole('menu', { name: 'Changer de contexte' });
+    await expect(menu).toBeVisible();
+    // Popover façon GitHub : titre + recherche visibles immédiatement.
+    await expect(menu.getByText('Changer de contexte')).toBeVisible();
+    await expect(menu.getByPlaceholder('Rechercher un Space...')).toBeVisible();
+    // Le menu n'énumère QUE les Spaces : le contexte Organisation courant est
+    // porté par la carte-déclencheur, il n'est pas répété dans la liste.
+    await expect(menu.getByRole('menuitem', { name: /Organisation/ })).toHaveCount(0);
+    // Spaces réels de /me/spaces : Finance disponible, Support suspendu désactivé.
+    await expect(menu.getByRole('menuitem', { name: /Finance/ })).toBeVisible();
+    const support = menu.getByRole('menuitem', { name: /Support/ });
+    await expect(support).toHaveAttribute('aria-disabled', 'true');
+    await expect(support).toContainText('Space suspendu');
+
+    // Cliquer Finance n'ouvre AUCUN contexte Space : message sobre, shell inchangé.
+    await menu.getByRole('menuitem', { name: /Finance/ }).click();
+    await expect(
+      page.getByText(
+        'L’ouverture sécurisée du Space sera disponible avec l’établissement du contexte Space.',
+      ),
+    ).toBeVisible();
+    await expect(page.getByText('john.doe@acme.com').first()).toBeVisible();
+
+    // Escape ferme le menu ; le contexte reste Organisation.
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('menu', { name: 'Changer de contexte' })).toHaveCount(0);
+    await expect(page).toHaveURL(/\/app\/dashboard$/);
   });
 });

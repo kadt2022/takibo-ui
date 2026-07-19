@@ -15,6 +15,18 @@ export class ApiForbiddenError extends Error {
   }
 }
 
+/**
+ * Preuve refusée (HTTP 401) : le token n'est plus accepté. La session en
+ * mémoire ne vaut plus rien — la politique est de la fermer et de revenir au
+ * login, jamais de réessayer avec la même preuve.
+ */
+export class ApiUnauthorizedError extends Error {
+  constructor(message = 'Session expirée ou invalide.') {
+    super(message);
+    this.name = 'ApiUnauthorizedError';
+  }
+}
+
 /** Échec technique récupérable (réseau, 5xx, réponse illisible). */
 export class ApiError extends Error {
   constructor(message = 'Chargement impossible pour le moment.') {
@@ -33,6 +45,9 @@ export async function authGet<T>(path: string, token: string): Promise<T> {
     throw new ApiError('Le service TAKIBO est injoignable.');
   }
 
+  if (response.status === 401) {
+    throw new ApiUnauthorizedError();
+  }
   if (response.status === 403) {
     throw new ApiForbiddenError();
   }

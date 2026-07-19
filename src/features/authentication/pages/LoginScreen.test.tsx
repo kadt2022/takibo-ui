@@ -93,7 +93,7 @@ describe('LoginScreen — connexion réelle (UI 02)', () => {
     await fillCredentials(user);
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
 
-    await screen.findByRole('heading', { name: /Bienvenue, john\.doe@acme\.com/ });
+    await screen.findAllByText('john.doe@acme.com');
 
     const call = fetchMock.mock.calls[0]!;
     expect(call[0]).toBe('/api/v1/auth/login');
@@ -110,9 +110,8 @@ describe('LoginScreen — connexion réelle (UI 02)', () => {
     await fillCredentials(user);
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
 
-    expect(
-      await screen.findByRole('heading', { name: /Bienvenue, john\.doe@acme\.com/ }),
-    ).toBeInTheDocument();
+    // Le shell est ouvert : la TopBar porte l'identité réelle de la session.
+    expect((await screen.findAllByText('john.doe@acme.com')).length).toBeGreaterThan(0);
 
     const dump = localStorageDump();
     expect(dump).not.toContain('accessToken');
@@ -150,7 +149,7 @@ describe('LoginScreen — connexion réelle (UI 02)', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     resolveFetch(okFetch());
-    await screen.findByRole('heading', { name: /Bienvenue, john\.doe@acme\.com/ });
+    await screen.findAllByText('john.doe@acme.com');
   });
 
   it('refuse une preuve non organisationnelle', async () => {
@@ -173,7 +172,8 @@ describe('LoginScreen — connexion réelle (UI 02)', () => {
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /Bienvenue, john/ })).not.toBeInTheDocument();
+    // Le shell ne s'est PAS ouvert : l'identité n'apparaît nulle part.
+    expect(screen.queryByText('john.doe@acme.com')).not.toBeInTheDocument();
   });
 
   it('redirige /app/** vers /login sans session', async () => {
@@ -192,7 +192,7 @@ describe('LoginScreen — connexion réelle (UI 02)', () => {
 
     await fillCredentials(user);
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
-    await screen.findByRole('heading', { name: /Bienvenue, john\.doe@acme\.com/ });
+    await screen.findAllByText('john.doe@acme.com');
 
     await user.click(screen.getByRole('button', { name: 'Se déconnecter' }));
 

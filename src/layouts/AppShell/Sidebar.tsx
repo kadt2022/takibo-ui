@@ -1,7 +1,8 @@
-import { Building2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 import { Logo } from '@/design-system/components/Logo';
+import { ContextSelector } from '@/features/context-selector/components/ContextSelector';
 import { organizationNav } from '@/layouts/AppShell/menu';
 import { isOrgAdmin } from '@/shared/identity/roles';
 import { useIdentity } from '@/shared/identity/useIdentity';
@@ -14,7 +15,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggleCollapsed, onNavigate }: SidebarProps) {
-  const { email, orgCode, organizationId, avatarInitial, roleLabel, roles } = useIdentity();
+  const { email, avatarInitial, roleLabel, roles } = useIdentity();
   const visibleNav = organizationNav.filter((item) => !item.orgAdminOnly || isOrgAdmin(roles));
 
   return (
@@ -36,23 +37,9 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate }: SidebarPro
         )}
       </div>
 
-      {/* Organisation courante (une seule — pas un sélecteur multi-org).
-          Code lisible en clair, UUID technique en info-bulle. */}
-      <div
-        className={cn(
-          'flex items-center gap-3 rounded-md border border-border bg-background/40 p-2.5',
-          collapsed && 'lg:justify-center',
-        )}
-        title={`Organisation ${orgCode} · ${organizationId}`}
-      >
-        <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/12 text-primary">
-          <Building2 className="size-4" aria-hidden="true" />
-        </span>
-        <span className={cn('min-w-0 leading-tight', collapsed && 'lg:hidden')}>
-          <span className="block truncate text-sm font-semibold text-text">{orgCode}</span>
-          <span className="block truncate text-xs text-text-muted">Organisation</span>
-        </span>
-      </div>
+      {/* Sélecteur de contexte Organisation / Mes Spaces (récit UI 06A) —
+          l'ancienne carte Organisation, devenue déclencheur façon GitHub. */}
+      <ContextSelector collapsed={collapsed} />
 
       {/* Navigation du contexte ORGANISATION */}
       <nav className="flex flex-1 flex-col gap-1">

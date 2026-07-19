@@ -105,7 +105,7 @@ async function renderLoggedIn(user: UserEvent) {
   await user.type(screen.getByLabelText('Adresse courriel'), 'john.doe@acme.com');
   await user.type(screen.getByLabelText('Mot de passe'), 'secret123');
   await user.click(screen.getByRole('button', { name: 'Se connecter' }));
-  await screen.findByRole('heading', { name: /Bienvenue, john\.doe@acme\.com/ });
+  await screen.findAllByText('john.doe@acme.com');
   return router;
 }
 
@@ -147,13 +147,18 @@ describe('shell sous session ORGANIZATION', () => {
     const user = userEvent.setup();
     await renderLoggedIn(user);
 
-    expect(screen.getByText('Contexte actuel')).toBeInTheDocument();
+    // La frontière est portée par la carte du sélecteur (Sidebar) et l'identité
+    // par la TopBar — plus de badge « Contexte actuel » ni de barre de recherche.
+    expect(screen.getAllByText('john.doe@acme.com').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Organisation').length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: 'Tableau de bord' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Mes Spaces' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Gestion des Spaces' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Rôles' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Groupes' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Utilisateurs' })).not.toBeInTheDocument();
+    // Récit UI 06A : Rôles et Groupes ne figurent PAS dans le menu Organisation —
+    // ce sont des surfaces situées par Space, réservées au futur contexte SPACE.
+    expect(screen.queryByRole('link', { name: 'Rôles' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Groupes' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Paramètres' })).toBeInTheDocument();
   });
 
